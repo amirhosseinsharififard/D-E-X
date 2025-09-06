@@ -27,10 +27,12 @@ A comprehensive trading bot for decentralized exchanges (DEX) built with ethers.
 - [x] Command manager system
 - [x] Basic commands (balance, status, help)
 - [x] Trading commands (buy, sell)
-- [x] Token management commands (approve, allowance)
+- [x] Token management commands (approve, allowance) ⚠️ **TEST PENDING**
 - [x] Comprehensive error handling
 - [x] Slippage protection (5%)
 - [x] Deadline management (3 minutes)
+
+**⚠️ NOTE**: `allowance` command needs real contract testing - currently using fake TEST_TOKEN address
 
 ### 🔄 Phase 2.3: Advanced Trading Features (IN PROGRESS)
 
@@ -91,3 +93,8 @@ A comprehensive trading bot for decentralized exchanges (DEX) built with ethers.
 - System is 95% ready for production use
 - Futures trading is the next major milestone
 - Documentation is comprehensive and up-to-date
+
+## ⚠️ Testing Status
+- **Fully Tested**: Connection, basic commands, trading commands, approve command
+- **Partially Tested**: Allowance command (needs real contract)
+- **Pending**: Real contract deployment and end-to-end testing
