@@ -18,18 +18,18 @@
  */
 
 // Import ethers.js library (version 6)
-import { ethers } from "ethers";
+import { ethers } from 'ethers';
 
 // Configuration for the trading bot
 // TODO: Move to .env file for production
 const config = {
     // Network configuration
-    rpcUrl: "http://localhost:8545", // Hardhat local network
-    privateKey: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80", // First Hardhat test account
+    rpcUrl: 'http://localhost:8545', // Hardhat local network
+    privateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80', // First Hardhat test account
 
     // Contract addresses (will be filled later when contracts are deployed)
-    routerAddress: "0x...", // Uniswap V2 Router address
-    wethAddress: "0x...", // Wrapped ETH address
+    routerAddress: '0x...', // Uniswap V2 Router address
+    wethAddress: '0x...', // Wrapped ETH address
 };
 
 // Initialize blockchain connection
@@ -45,10 +45,10 @@ const wallet = new ethers.Wallet(config.privateKey, provider);
 async function testConnection() {
     try {
         const balance = await provider.getBalance(wallet.address);
-        console.log("Balance:", ethers.formatEther(balance), "ETH");
-        console.log("Connection successful!");
+        console.log('Balance:', ethers.formatEther(balance), 'ETH');
+        console.log('Connection successful!');
     } catch (error) {
-        console.error("Connection error:", error.message);
+        console.error('Connection error:', error.message);
     }
 }
 
@@ -76,7 +76,7 @@ function createTradingBot(provider, wallet, config) {
  */
 function startBot(bot) {
     bot.isRunning = true;
-    console.log("Trading bot started");
+    console.log('Trading bot started');
 }
 
 /**
@@ -86,7 +86,7 @@ function startBot(bot) {
  */
 function stopBot(bot) {
     bot.isRunning = false;
-    console.log("Trading bot stopped");
+    console.log('Trading bot stopped');
 }
 
 /**
@@ -100,7 +100,7 @@ async function getBalance(bot) {
         const balance = await bot.provider.getBalance(bot.wallet.address);
         return ethers.formatEther(balance);
     } catch (error) {
-        console.error("Error getting balance:", error.message);
+        console.error('Error getting balance:', error.message);
         return 0;
     }
 }
@@ -116,11 +116,11 @@ async function getWalletStatus(bot) {
         const balance = await getBalance(bot);
         return {
             address: bot.wallet.address,
-            balance: balance + "ETH",
+            balance: balance + 'ETH',
             isRunning: bot.isRunning,
         };
     } catch (error) {
-        console.error("Error getting wallet status:", error.message);
+        console.error('Error getting wallet status:', error.message);
         return null;
     }
 }
@@ -132,16 +132,16 @@ async function getWalletStatus(bot) {
  * @returns {Promise<void>}
  */
 async function displayWalletInfo(bot) {
-    console.log("\n === Wallet Information ===");
+    console.log('\n === Wallet Information ===');
     const status = await getWalletStatus(bot);
     if (status) {
-        console.log("address:", status.address);
-        console.log("balance:", status.balance);
-        console.log("Status:", status.isRunning ? "Running" : "Stopped");
+        console.log('address:', status.address);
+        console.log('balance:', status.balance);
+        console.log('Status:', status.isRunning ? 'Running' : 'Stopped');
     } else {
-        console.log("Error getting wallet status");
+        console.log('Error getting wallet status');
     }
-    console.log("========================");
+    console.log('========================');
 }
 
 /**
@@ -195,11 +195,11 @@ const commandManager = {
      * List all available commands
      */
     list() {
-        console.log("\n=== Available Commands ===");
+        console.log('\n=== Available Commands ===');
         for (const [name, command] of this.commands) {
             console.log(`${name}: ${command.description}`);
         }
-        console.log("========================");
+        console.log('========================');
     },
 };
 
@@ -215,13 +215,13 @@ const CONTRACTS = {
      * Standard interface for ERC-20 tokens
      */
     ERC20_ABI: [
-        "function balanceOf(address owner) view returns (uint256)", // Get token balance
-        "function decimals() view returns (uint8)", // Get token decimals
-        "function approve(address spender, uint256 amount) returns (bool)", // Approve spending
-        "function allowance(address owner, address spender) view returns (uint256)", // Check allowance
-        "function transfer(address to, uint256 amount) returns (bool)", // Transfer tokens
-        "function name() view returns (string)", // Get token name
-        "function symbol() view returns (string)", // Get token symbol
+        'function balanceOf(address owner) view returns (uint256)', // Get token balance
+        'function decimals() view returns (uint8)', // Get token decimals
+        'function approve(address spender, uint256 amount) returns (bool)', // Approve spending
+        'function allowance(address owner, address spender) view returns (uint256)', // Check allowance
+        'function transfer(address to, uint256 amount) returns (bool)', // Transfer tokens
+        'function name() view returns (string)', // Get token name
+        'function symbol() view returns (string)', // Get token symbol
     ],
 
     /**
@@ -229,10 +229,10 @@ const CONTRACTS = {
      * Interface for Uniswap V2 router contract
      */
     ROUTER_ABI: [
-        "function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts)", // Get swap amounts
-        "function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts)", // Swap ETH for tokens
-        "function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)", // Swap tokens for ETH
-        "function WETH() external pure returns (address)", // Get WETH address
+        'function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts)', // Get swap amounts
+        'function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts)', // Swap ETH for tokens
+        'function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)', // Swap tokens for ETH
+        'function WETH() external pure returns (address)', // Get WETH address
     ],
 
     /**
@@ -240,10 +240,10 @@ const CONTRACTS = {
      * Mainnet addresses (will be different on testnets)
      */
     ADDRESSES: {
-        ROUTER: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", // Uniswap V2 Router
-        WETH: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // Wrapped ETH
-        USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USD Coin
-        TEST_TOKEN: "0x5FbDB2315678afecb367f032d93F642f64180aa3", // Test token for local testing
+        ROUTER: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D', // Uniswap V2 Router
+        WETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', // Wrapped ETH
+        USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USD Coin
+        TEST_TOKEN: '0x5FbDB2315678afecb367f032d93F642f64180aa3', // Test token for local testing
     },
 };
 
@@ -319,29 +319,25 @@ async function buyTokenWithETH(bot, tokenAddress, ethAmount) {
 
         // Get expected output amount
         const amountsOut = await router.getAmountsOut(amountIn, path);
-        const amountOutMin = (amountsOut[1] * 95n) / 100n; // 5% slippage protection
+        const slippagePercent = ethers.parseUnits('95', 2); // 95%
+        const amountOutMin = (amountsOut[1] * slippagePercent) / ethers.parseUnits('100', 2);
 
-        console.log(
-            `Expected to receive: ${ethers.formatUnits(amountsOut[1], 18)} tokens`
-        );
+        console.log(`Expected to receive: ${ethers.formatUnits(amountsOut[1], 18)} tokens`);
 
         // Set deadline (3 minutes from now)
         const deadline = Math.floor(Date.now() / 1000) + 180;
 
         // Execute swap transaction
-        const tx = await router.swapExactETHForTokens(
-            amountOutMin,
-            path,
-            bot.wallet.address,
-            deadline, { value: amountIn }
-        );
+        const tx = await router.swapExactETHForTokens(amountOutMin, path, bot.wallet.address, deadline, {
+            value: amountIn,
+        });
 
         console.log(`Transaction sent: ${tx.hash}`);
         const receipt = await tx.wait();
         console.log(`Transaction confirmed in block: ${receipt.blockNumber}`);
         return receipt;
     } catch (error) {
-        console.error("Error buying token:", error.message);
+        console.error('Error buying token:', error.message);
         return null;
     }
 }
@@ -371,12 +367,12 @@ async function sellTokenForETH(bot, tokenAddress, tokenAmount) {
         // Check token balance
         const balance = await token.balanceOf(bot.wallet.address);
         if (balance < amountIn) {
-            console.error("Insufficient token balance");
+            console.error('Insufficient token balance');
             return null;
         }
 
         // Approve token spending
-        console.log("Approving token spending...");
+        console.log('Approving token spending...');
         const approveTx = await token.approve(router.address, amountIn);
         await approveTx.wait();
 
@@ -385,30 +381,23 @@ async function sellTokenForETH(bot, tokenAddress, tokenAmount) {
 
         // Get expected output amount
         const amountsOut = await router.getAmountsOut(amountIn, path);
-        const amountOutMin = (amountsOut[1] * 95n) / 100n; // 5% slippage protection
+        const slippagePercent = ethers.parseUnits('95', 2); // 95%
+        const amountOutMin = (amountsOut[1] * slippagePercent) / ethers.parseUnits('100', 2);
 
-        console.log(
-            `Expected to receive: ${ethers.formatEther(amountsOut[1])} ETH`
-        );
+        console.log(`Expected to receive: ${ethers.formatEther(amountsOut[1])} ETH`);
 
         // Set deadline (3 minutes from now)
         const deadline = Math.floor(Date.now() / 1000) + 180;
 
         // Execute swap transaction
-        const tx = await router.swapExactTokensForETH(
-            amountIn,
-            amountOutMin,
-            path,
-            bot.wallet.address,
-            deadline
-        );
+        const tx = await router.swapExactTokensForETH(amountIn, amountOutMin, path, bot.wallet.address, deadline);
 
         console.log(`Transaction sent: ${tx.hash}`);
         const receipt = await tx.wait();
         console.log(`Transaction confirmed in block: ${receipt.blockNumber}`);
         return receipt;
     } catch (error) {
-        console.error("Error selling token:", error.message);
+        console.error('Error selling token:', error.message);
         return null;
     }
 }
@@ -420,18 +409,18 @@ async function sellTokenForETH(bot, tokenAddress, tokenAmount) {
  */
 
 // Get wallet ETH balance
-commandManager.register("balance", "Get wallet balance", async(bot) => {
+commandManager.register('balance', 'Get wallet balance', async(bot) => {
     const balance = await getBalance(bot);
     console.log(`Current balance: ${balance} ETH`);
 });
 
 // Display complete wallet status
-commandManager.register("status", "Get wallet status", async(bot) => {
+commandManager.register('status', 'Get wallet status', async(bot) => {
     await displayWalletInfo(bot);
 });
 
 // Show all available commands
-commandManager.register("help", "Show available commands", async() => {
+commandManager.register('help', 'Show available commands', async() => {
     commandManager.list();
 });
 
@@ -442,100 +431,73 @@ commandManager.register("help", "Show available commands", async() => {
  */
 
 // Buy token with ETH
-commandManager.register(
-    "buy",
-    "Buy token with ETH",
-    async(bot, tokenAddress, ethAmount) => {
-        if (!tokenAddress || !ethAmount) {
-            console.error("Usage: buy <tokenAddress> <ethAmount>");
-            return;
-        }
-
-        const result = await buyTokenWithETH(
-            bot,
-            tokenAddress,
-            parseFloat(ethAmount)
-        );
-        if (result) {
-            console.log("Buy order successful!");
-        } else {
-            console.log("Buy order failed");
-        }
+commandManager.register('buy', 'Buy token with ETH', async(bot, tokenAddress, ethAmount) => {
+    if (!tokenAddress || !ethAmount) {
+        console.error('Usage: buy <tokenAddress> <ethAmount>');
+        return;
     }
-);
+
+    const result = await buyTokenWithETH(bot, tokenAddress, parseFloat(ethAmount));
+    if (result) {
+        console.log('Buy order successful!');
+    } else {
+        console.log('Buy order failed');
+    }
+});
 
 // Sell token for ETH
-commandManager.register(
-    "sell",
-    "Sell token for ETH",
-    async(bot, tokenAddress, tokenAmount) => {
-        if (!tokenAddress || !tokenAmount) {
-            console.error("Usage: sell <tokenAddress> <tokenAmount>");
-            return;
-        }
-        const result = await sellTokenForETH(
-            bot,
-            tokenAddress,
-            parseFloat(tokenAmount)
-        );
-        if (result) {
-            console.log("Sell order successful!");
-        } else {
-            console.log("Sell order failed");
-        }
+commandManager.register('sell', 'Sell token for ETH', async(bot, tokenAddress, tokenAmount) => {
+    if (!tokenAddress || !tokenAmount) {
+        console.error('Usage: sell <tokenAddress> <tokenAmount>');
+        return;
     }
-);
+    const result = await sellTokenForETH(bot, tokenAddress, parseFloat(tokenAmount));
+    if (result) {
+        console.log('Sell order successful!');
+    } else {
+        console.log('Sell order failed');
+    }
+});
 
 // Approve token spending for router
-commandManager.register(
-    "approve",
-    "Approve token spending",
-    async(bot, tokenAddress, amount) => {
-        if (!tokenAddress || !amount) {
-            console.error("Usage: approve <tokenAddress> <amount>");
-            return;
-        }
-
-        try {
-            const contractManager = createContractManager(bot.provider, bot.wallet);
-            const token = contractManager.getTokenContract(tokenAddress);
-            const amountWei = ethers.parseUnits(amount.toString(), 18);
-
-            console.log(`Approving ${amount} tokens...`);
-
-            const tx = await token.approve(CONTRACTS.ADDRESSES.ROUTER, amountWei);
-            await tx.wait();
-            console.log("Approval successful");
-        } catch (error) {
-            console.error("Error approving token:", error.message);
-            return null;
-        }
+commandManager.register('approve', 'Approve token spending', async(bot, tokenAddress, amount) => {
+    if (!tokenAddress || !amount) {
+        console.error('Usage: approve <tokenAddress> <amount>');
+        return;
     }
-);
+
+    try {
+        const contractManager = createContractManager(bot.provider, bot.wallet);
+        const token = contractManager.getTokenContract(tokenAddress);
+        const amountWei = ethers.parseUnits(amount.toString(), 18);
+
+        console.log(`Approving ${amount} tokens...`);
+
+        const tx = await token.approve(CONTRACTS.ADDRESSES.ROUTER, amountWei);
+        await tx.wait();
+        console.log('Approval successful');
+    } catch (error) {
+        console.error('Error approving token:', error.message);
+        return null;
+    }
+});
 
 // Check token allowance for router
-commandManager.register(
-    "allowance",
-    "Check token allowance",
-    async(bot, tokenAddress) => {
-        if (!tokenAddress) {
-            console.error("Usage: allowance <tokenAddress>");
-            return;
-        }
-        try {
-            const contractManager = createContractManager(bot.provider, bot.wallet);
-            const token = contractManager.getTokenContract(tokenAddress);
-
-            const allowance = await token.allowance(
-                bot.wallet.address,
-                CONTRACTS.ADDRESSES.ROUTER
-            );
-            console.log(`Allowance: ${ethers.formatUnits(allowance, 18)} tokens`);
-        } catch (error) {
-            console.error("Error checking allowance:", error.message);
-        }
+commandManager.register('allowance', 'Check token allowance', async(bot, tokenAddress) => {
+    if (!tokenAddress) {
+        console.error('Usage: allowance <tokenAddress>');
+        return;
     }
-);
+    try {
+        const contractManager = createContractManager(bot.provider, bot.wallet);
+        const token = contractManager.getTokenContract(tokenAddress);
+
+        const allowance = await token.allowance(bot.wallet.address, CONTRACTS.ADDRESSES.ROUTER);
+        console.log(`Allowance: ${ethers.formatUnits(allowance, 18)} tokens`);
+    } catch (error) {
+        console.error('Error checking allowance:', error.message);
+    }
+});
 
 /**
  * Test Trading Bot
@@ -546,44 +508,31 @@ commandManager.register(
  * @returns {Promise<void>}
  */
 async function testBot() {
-    console.log("\n=== Testing Trading Bot ===");
+    console.log('\n=== Testing Trading Bot ===');
 
     // Create bot instance
     const bot = createTradingBot(provider, wallet, config);
 
     // Test basic commands
-    console.log("\n--- Testing Basic Commands ---");
-    await commandManager.execute("help", bot);
-    await commandManager.execute("balance", bot);
-    await commandManager.execute("status", bot);
+    console.log('\n--- Testing Basic Commands ---');
+    await commandManager.execute('help', bot);
+    await commandManager.execute('balance', bot);
+    await commandManager.execute('status', bot);
 
     // Test trading commands with test token
-    console.log("\n--- Testing Trading Commands ---");
-    await commandManager.execute(
-        "allowance",
-        bot,
-        CONTRACTS.ADDRESSES.TEST_TOKEN
-    );
-    await commandManager.execute(
-        "approve",
-        bot,
-        CONTRACTS.ADDRESSES.TEST_TOKEN,
-        "1000"
-    );
-    await commandManager.execute(
-        "allowance",
-        bot,
-        CONTRACTS.ADDRESSES.TEST_TOKEN
-    );
+    console.log('\n--- Testing Trading Commands ---');
+    await commandManager.execute('allowance', bot, CONTRACTS.ADDRESSES.TEST_TOKEN);
+    await commandManager.execute('approve', bot, CONTRACTS.ADDRESSES.TEST_TOKEN, '1000');
+    await commandManager.execute('allowance', bot, CONTRACTS.ADDRESSES.TEST_TOKEN);
 
     // Test bot lifecycle
     startBot(bot);
-    console.log("Bot is running:", bot.isRunning);
+    console.log('Bot is running:', bot.isRunning);
 
     stopBot(bot);
-    console.log("Bot is running:", bot.isRunning);
+    console.log('Bot is running:', bot.isRunning);
 
-    console.log("=== Testing Trading Bot completed ===");
+    console.log('=== Testing Trading Bot completed ===');
 }
 
 /**

@@ -11,10 +11,10 @@
     "license": "ISC",
     "description": "",
     "dependencies": {
+        "async-retry": "^1.3.3",
         "dotenv": "^17.2.2",
         "ethers": "^6.15.0",
-        "winston": "^3.11.0",
-        "async-retry": "^1.3.3"
+        "winston": "^3.11.0"
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-ignition": "^3.0.2",
@@ -27,6 +27,15 @@
         "forge-std": "github:foundry-rs/forge-std#v1.9.4",
         "hardhat": "^3.0.4",
         "mocha": "^11.7.2",
+        "prettier": "^3.6.2",
         "typescript": "~5.8.0"
+    },
+    "prettier": {
+        "printWidth": 120,
+        "tabWidth": 4,
+        "semi": true,
+        "singleQuote": true,
+        "trailingComma": "es5",
+        "bracketSpacing": true
     }
 }
