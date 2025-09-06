@@ -1,0 +1,31 @@
+/*
+ * پیکربندی TypeScript برای پروژه ربات معاملاتی DEX
+ * بر اساس: https://github.com/tsconfig/bases/blob/501da2bcd640cf95c95805783e1012b992338f28/bases/node22.json
+ */
+{
+  "compilerOptions": {
+    // کتابخانه‌های JavaScript که در دسترس هستند
+    "lib": ["es2023"],
+
+    // سیستم ماژول - استفاده از Node.js 16+ modules
+    "module": "node16",
+
+    // نسخه هدف JavaScript برای کامپایل
+    "target": "es2022",
+
+    // فعال کردن تمام بررسی‌های سختگیرانه TypeScript
+    "strict": true,
+
+    // فعال کردن interop بین CommonJS و ES modules
+    "esModuleInterop": true,
+
+    // رد کردن بررسی تایپ برای فایل‌های .d.ts
+    "skipLibCheck": true,
+
+    // استراتژی حل ماژول‌ها - Node.js 16+ style
+    "moduleResolution": "node16",
+
+    // پوشه خروجی فایل‌های کامپایل شده
+    "outDir": "dist"
+  }
+}
