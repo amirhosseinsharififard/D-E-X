@@ -1,22 +1,47 @@
+/**
+ * DEX Trading Bot - Advanced Trading System
+ *
+ * This is a comprehensive trading bot for decentralized exchanges (DEX)
+ * Built with ethers.js v6 and Hardhat for local development
+ *
+ * Features:
+ * - ETH to Token swaps
+ * - Token to ETH swaps
+ * - Command-based trading system
+ * - Slippage protection
+ * - Gas optimization
+ * - Error handling
+ *
+ * @author Your Name
+ * @version 1.0.0
+ * @since 2024
+ */
+
 // Import ethers.js library (version 6)
 import { ethers } from "ethers";
 
-// dotenv.config();
+// Configuration for the trading bot
+// TODO: Move to .env file for production
 const config = {
-    // Local Hardhat network
-    rpcUrl: "http://localhost:8545",
-    privateKey: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80", // First Hardhat key
+    // Network configuration
+    rpcUrl: "http://localhost:8545", // Hardhat local network
+    privateKey: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80", // First Hardhat test account
 
-    // Contract addresses (will be filled later)
-    routerAddress: "0x...", // Will be filled later
-    wethAddress: "0x...", // Will be filled later
+    // Contract addresses (will be filled later when contracts are deployed)
+    routerAddress: "0x...", // Uniswap V2 Router address
+    wethAddress: "0x...", // Wrapped ETH address
 };
 
-// Create provider and wallet
+// Initialize blockchain connection
 const provider = new ethers.JsonRpcProvider(config.rpcUrl);
 const wallet = new ethers.Wallet(config.privateKey, provider);
 
-// Test connection
+/**
+ * Test connection to the blockchain network
+ * Displays wallet balance and connection status
+ *
+ * @returns {Promise<void>}
+ */
 async function testConnection() {
     try {
         const balance = await provider.getBalance(wallet.address);
@@ -27,31 +52,49 @@ async function testConnection() {
     }
 }
 
-// Trading Bot Functions
+/**
+ * Create a new trading bot instance
+ *
+ * @param {ethers.Provider} provider - Blockchain provider
+ * @param {ethers.Wallet} wallet - Wallet instance
+ * @param {Object} config - Configuration object
+ * @returns {Object} Trading bot instance
+ */
 function createTradingBot(provider, wallet, config) {
     return {
-        provider: provider, // اتصال به شبکه
-        wallet: wallet, // کیف پول ما
-        config: config, // تنظیمات
-        isRunning: false, // وضعیت ربات (خاموش/روشن)
+        provider: provider, // Blockchain connection
+        wallet: wallet, // Wallet for transactions
+        config: config, // Bot configuration
+        isRunning: false, // Bot status (stopped/running)
     };
 }
 
-// Start bot
+/**
+ * Start the trading bot
+ *
+ * @param {Object} bot - Trading bot instance
+ */
 function startBot(bot) {
     bot.isRunning = true;
     console.log("Trading bot started");
 }
 
-// Stop bot
+/**
+ * Stop the trading bot
+ *
+ * @param {Object} bot - Trading bot instance
+ */
 function stopBot(bot) {
     bot.isRunning = false;
     console.log("Trading bot stopped");
 }
 
-// Test bot
-
-// Get balance
+/**
+ * Get wallet ETH balance
+ *
+ * @param {Object} bot - Trading bot instance
+ * @returns {Promise<string>} Formatted balance in ETH
+ */
 async function getBalance(bot) {
     try {
         const balance = await bot.provider.getBalance(bot.wallet.address);
@@ -62,7 +105,12 @@ async function getBalance(bot) {
     }
 }
 
-// Get wallet status
+/**
+ * Get complete wallet status
+ *
+ * @param {Object} bot - Trading bot instance
+ * @returns {Promise<Object|null>} Wallet status object or null if error
+ */
 async function getWalletStatus(bot) {
     try {
         const balance = await getBalance(bot);
@@ -77,7 +125,12 @@ async function getWalletStatus(bot) {
     }
 }
 
-//Display wallet status
+/**
+ * Display wallet information in a formatted way
+ *
+ * @param {Object} bot - Trading bot instance
+ * @returns {Promise<void>}
+ */
 async function displayWalletInfo(bot) {
     console.log("\n === Wallet Information ===");
     const status = await getWalletStatus(bot);
@@ -91,11 +144,22 @@ async function displayWalletInfo(bot) {
     console.log("========================");
 }
 
-// command maneger system
+/**
+ * Command Manager System
+ *
+ * Manages all trading bot commands in a centralized way
+ * Allows dynamic registration and execution of commands
+ */
 const commandManager = {
-    commands: new Map(),
+    commands: new Map(), // Storage for all registered commands
 
-    // register  a new command
+    /**
+     * Register a new command
+     *
+     * @param {string} name - Command name
+     * @param {string} description - Command description
+     * @param {Function} handler - Command handler function
+     */
     register(name, description, handler) {
         this.commands.set(name, {
             description,
@@ -105,7 +169,14 @@ const commandManager = {
         console.log(`Command ${name} registered successfully`);
     },
 
-    // execute a command
+    /**
+     * Execute a command
+     *
+     * @param {string} name - Command name to execute
+     * @param {Object} bot - Trading bot instance
+     * @param {...any} args - Command arguments
+     * @returns {Promise<boolean>} Success status
+     */
     async execute(name, bot, ...args) {
         const cmd = this.commands.get(name);
         if (!cmd) {
@@ -120,7 +191,9 @@ const commandManager = {
         }
     },
 
-    // list all available commands
+    /**
+     * List all available commands
+     */
     list() {
         console.log("\n=== Available Commands ===");
         for (const [name, command] of this.commands) {
@@ -130,59 +203,107 @@ const commandManager = {
     },
 };
 
-// Contract ABIs and Addresses
+/**
+ * Contract ABIs and Addresses
+ *
+ * Contains all necessary contract interfaces and addresses
+ * for interacting with DeFi protocols
+ */
 const CONTRACTS = {
-    // ERC-20 Token ABI
+    /**
+     * ERC-20 Token ABI
+     * Standard interface for ERC-20 tokens
+     */
     ERC20_ABI: [
-        "function balanceOf(address owner) view returns (uint256)",
-        "function decimals() view returns (uint8)",
-        "function approve(address spender, uint256 amount) returns (bool)",
-        "function allowance(address owner, address spender) view returns (uint256)",
-        "function transfer(address to, uint256 amount) returns (bool)",
-        "function name() view returns (string)",
-        "function symbol() view returns (string)",
+        "function balanceOf(address owner) view returns (uint256)", // Get token balance
+        "function decimals() view returns (uint8)", // Get token decimals
+        "function approve(address spender, uint256 amount) returns (bool)", // Approve spending
+        "function allowance(address owner, address spender) view returns (uint256)", // Check allowance
+        "function transfer(address to, uint256 amount) returns (bool)", // Transfer tokens
+        "function name() view returns (string)", // Get token name
+        "function symbol() view returns (string)", // Get token symbol
     ],
 
-    // Uniswap V2 Router ABI
+    /**
+     * Uniswap V2 Router ABI
+     * Interface for Uniswap V2 router contract
+     */
     ROUTER_ABI: [
-        "function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts)",
-        "function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts)",
-        "function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)",
-        "function WETH() external pure returns (address)",
+        "function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts)", // Get swap amounts
+        "function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts)", // Swap ETH for tokens
+        "function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)", // Swap tokens for ETH
+        "function WETH() external pure returns (address)", // Get WETH address
     ],
 
-    // Contract addresses (Hardhat local)
+    /**
+     * Contract addresses
+     * Mainnet addresses (will be different on testnets)
+     */
     ADDRESSES: {
-        ROUTER: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", // Uniswap V2
-        WETH: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // WETH
-        USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC
+        ROUTER: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", // Uniswap V2 Router
+        WETH: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // Wrapped ETH
+        USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USD Coin
+        TEST_TOKEN: "0x5FbDB2315678afecb367f032d93F642f64180aa3", // Test token for local testing
     },
 };
 
-//contract manager
+/**
+ * Contract Manager
+ *
+ * Manages contract instances and provides easy access to contract functions
+ *
+ * @param {ethers.Provider} provider - Blockchain provider
+ * @param {ethers.Wallet} wallet - Wallet instance
+ * @returns {Object} Contract manager instance
+ */
 function createContractManager(provider, wallet) {
     return {
-        provider,
-        wallet,
+        provider, // Blockchain provider
+        wallet, // Wallet for signing transactions
 
-        //create contract instance
+        /**
+         * Create a contract instance
+         *
+         * @param {string} address - Contract address
+         * @param {Array} abi - Contract ABI
+         * @returns {ethers.Contract} Contract instance
+         */
         getContract(address, abi) {
             return new ethers.Contract(address, abi, wallet);
         },
 
-        //get token contract
+        /**
+         * Get ERC-20 token contract instance
+         *
+         * @param {string} tokenAddress - Token contract address
+         * @returns {ethers.Contract} Token contract instance
+         */
         getTokenContract(tokenAddress) {
             return this.getContract(tokenAddress, CONTRACTS.ERC20_ABI);
         },
 
-        // Get router contract
+        /**
+         * Get Uniswap router contract instance
+         *
+         * @returns {ethers.Contract} Router contract instance
+         */
         getRouterContract() {
             return this.getContract(CONTRACTS.ADDRESSES.ROUTER, CONTRACTS.ROUTER_ABI);
         },
     };
 }
 
-// trading functions
+/**
+ * Buy token with ETH
+ *
+ * Executes a swap from ETH to token using Uniswap V2
+ * Includes slippage protection and deadline management
+ *
+ * @param {Object} bot - Trading bot instance
+ * @param {string} tokenAddress - Address of token to buy
+ * @param {number} ethAmount - Amount of ETH to spend
+ * @returns {Promise<Object|null>} Transaction receipt or null if failed
+ */
 async function buyTokenWithETH(bot, tokenAddress, ethAmount) {
     try {
         console.log(`Buying token with ${ethAmount} ETH`);
@@ -190,31 +311,34 @@ async function buyTokenWithETH(bot, tokenAddress, ethAmount) {
         const contractManager = createContractManager(bot.provider, bot.wallet);
         const router = contractManager.getRouterContract();
 
-        //convert eth to wei
+        // Convert ETH to wei (18 decimals)
         const amountIn = ethers.parseEther(ethAmount.toString());
 
-        //get expected output
-        const amoutOut = await router.getAmountsOut(amountIn, path);
-        const amoutnOutMin = (amoutOut[1] * `95n`) / `100n`; // 5% slippage;
+        // Trading path: ETH -> WETH -> Token
+        const path = [CONTRACTS.ADDRESSES.WETH, tokenAddress];
+
+        // Get expected output amount
+        const amountsOut = await router.getAmountsOut(amountIn, path);
+        const amountOutMin = (amountsOut[1] * 95 n) / 100 n; // 5% slippage protection
 
         console.log(
-            `expected to receive: ${ethers.formatUnits(amoutOut[1], 18)} tokens`
+            `Expected to receive: ${ethers.formatUnits(amountsOut[1], 18)} tokens`
         );
 
+        // Set deadline (3 minutes from now)
+        const deadline = Math.floor(Date.now() / 1000) + 180;
+
+        // Execute swap transaction
         const tx = await router.swapExactETHForTokens(
-            amoutnOutMin,
+            amountOutMin,
             path,
             bot.wallet.address,
-
-            deadline, {
-                value: amountIn,
-            }
+            deadline, { value: amountIn }
         );
 
-        console.log("Transaction sent: ", tx.hash);
+        console.log(`Transaction sent: ${tx.hash}`);
         const receipt = await tx.wait();
-        console.log("Transaction confirmed in block: ", receipt.blockNumber);
-        console.log("transaction successfull", receipt.status);
+        console.log(`Transaction confirmed in block: ${receipt.blockNumber}`);
         return receipt;
     } catch (error) {
         console.error("Error buying token:", error.message);
@@ -222,56 +346,66 @@ async function buyTokenWithETH(bot, tokenAddress, ethAmount) {
     }
 }
 
-// sell token
+/**
+ * Sell token for ETH
+ *
+ * Executes a swap from token to ETH using Uniswap V2
+ * Includes balance check, approval, and slippage protection
+ *
+ * @param {Object} bot - Trading bot instance
+ * @param {string} tokenAddress - Address of token to sell
+ * @param {number} tokenAmount - Amount of tokens to sell
+ * @returns {Promise<Object|null>} Transaction receipt or null if failed
+ */
 async function sellTokenForETH(bot, tokenAddress, tokenAmount) {
     try {
-        console.log(`Selling  ${tokenAmount} token for ETH...`);
+        console.log(`Selling ${tokenAmount} tokens for ETH...`);
 
         const contractManager = createContractManager(bot.provider, bot.wallet);
         const router = contractManager.getRouterContract();
         const token = contractManager.getTokenContract(tokenAddress);
 
-        //convert token amount to wei
+        // Convert token amount to wei
         const amountIn = ethers.parseUnits(tokenAmount.toString(), 18);
-        //check balance
+
+        // Check token balance
         const balance = await token.balanceOf(bot.wallet.address);
         if (balance < amountIn) {
-            console.error("Insufficient tokenbalance");
+            console.error("Insufficient token balance");
             return null;
         }
 
-        //approve token spending
-        console.log("approving token spending...");
+        // Approve token spending
+        console.log("Approving token spending...");
         const approveTx = await token.approve(router.address, amountIn);
         await approveTx.wait();
 
-        //trading path: toen->weth->eth
+        // Trading path: Token -> WETH -> ETH
         const path = [tokenAddress, CONTRACTS.ADDRESSES.WETH];
 
-        //get expected output
+        // Get expected output amount
         const amountsOut = await router.getAmountsOut(amountIn, path);
-        const amoutnOutMin = (amountsOut[1] * `95n`) / `100n`; // 5% slippage
+        const amountOutMin = (amountsOut[1] * 95 n) / 100 n; // 5% slippage protection
 
         console.log(
-            `expected to receive: ${ethers.formatUnits(amountsOut[1])} ETH`
+            `Expected to receive: ${ethers.formatEther(amountsOut[1])} ETH`
         );
 
-        //set deadline
-        const deadline = Math.floor(Date.now() / 1000) + 180; // 3 دقیقه
+        // Set deadline (3 minutes from now)
+        const deadline = Math.floor(Date.now() / 1000) + 180;
 
-        // Execute swap
-        const tx = await router.swaExpactTokensForETH(
+        // Execute swap transaction
+        const tx = await router.swapExactTokensForETH(
             amountIn,
-            amountsOut,
+            amountOutMin,
             path,
             bot.wallet.address,
             deadline
         );
 
-        console.log(`transaction sent: ${tx.hash}`);
+        console.log(`Transaction sent: ${tx.hash}`);
         const receipt = await tx.wait();
-        console.log("transaction confirmed in block: ", receipt.blockNumber);
-        console.log("transaction successfull", receipt.status);
+        console.log(`Transaction confirmed in block: ${receipt.blockNumber}`);
         return receipt;
     } catch (error) {
         console.error("Error selling token:", error.message);
@@ -279,21 +413,35 @@ async function sellTokenForETH(bot, tokenAddress, tokenAmount) {
     }
 }
 
-// Register basic commands
+/**
+ * Register Basic Commands
+ *
+ * These commands provide basic wallet and system information
+ */
+
+// Get wallet ETH balance
 commandManager.register("balance", "Get wallet balance", async(bot) => {
     const balance = await getBalance(bot);
     console.log(`Current balance: ${balance} ETH`);
 });
 
+// Display complete wallet status
 commandManager.register("status", "Get wallet status", async(bot) => {
     await displayWalletInfo(bot);
 });
 
+// Show all available commands
 commandManager.register("help", "Show available commands", async() => {
     commandManager.list();
 });
 
-// ==== register  trading commands ====
+/**
+ * Register Trading Commands
+ *
+ * These commands handle all trading operations
+ */
+
+// Buy token with ETH
 commandManager.register(
     "buy",
     "Buy token with ETH",
@@ -303,19 +451,20 @@ commandManager.register(
             return;
         }
 
-        const resualt = await buyTokenWithETH(
+        const result = await buyTokenWithETH(
             bot,
             tokenAddress,
             parseFloat(ethAmount)
         );
-        if (resualt) {
+        if (result) {
             console.log("Buy order successful!");
         } else {
-            console.log("buy order failed");
+            console.log("Buy order failed");
         }
     }
 );
 
+// Sell token for ETH
 commandManager.register(
     "sell",
     "Sell token for ETH",
@@ -324,19 +473,20 @@ commandManager.register(
             console.error("Usage: sell <tokenAddress> <tokenAmount>");
             return;
         }
-        const resualt = await sellTokenForETH(
+        const result = await sellTokenForETH(
             bot,
             tokenAddress,
             parseFloat(tokenAmount)
         );
-        if (resualt) {
-            console.log("sell order successful");
+        if (result) {
+            console.log("Sell order successful!");
         } else {
             console.log("Sell order failed");
         }
     }
 );
 
+// Approve token spending for router
 commandManager.register(
     "approve",
     "Approve token spending",
@@ -363,9 +513,10 @@ commandManager.register(
     }
 );
 
+// Check token allowance for router
 commandManager.register(
     "allowance",
-    "check token allowance",
+    "Check token allowance",
     async(bot, tokenAddress) => {
         if (!tokenAddress) {
             console.error("Usage: allowance <tokenAddress>");
@@ -386,44 +537,66 @@ commandManager.register(
     }
 );
 
-// ==== test bot ====
+/**
+ * Test Trading Bot
+ *
+ * Comprehensive test function that validates all bot functionality
+ * Tests commands, trading operations, and bot lifecycle
+ *
+ * @returns {Promise<void>}
+ */
 async function testBot() {
     console.log("\n=== Testing Trading Bot ===");
 
-    // create bot
+    // Create bot instance
     const bot = createTradingBot(provider, wallet, config);
 
-    console.log("\n--- Testing Commands ---");
+    // Test basic commands
+    console.log("\n--- Testing Basic Commands ---");
     await commandManager.execute("help", bot);
     await commandManager.execute("balance", bot);
     await commandManager.execute("status", bot);
 
-    // Test trading commands (with USDC address)
+    // Test trading commands with test token
     console.log("\n--- Testing Trading Commands ---");
-    console.log("\n--- Testing Trading Commands ---");
-    console.log("\n--- Testing Trading Commands ---");
-    await commandManager.execute("allowance", bot, CONTRACTS.ADDRESSES.USDC);
+    await commandManager.execute(
+        "allowance",
+        bot,
+        CONTRACTS.ADDRESSES.TEST_TOKEN
+    );
     await commandManager.execute(
         "approve",
         bot,
-        CONTRACTS.ADDRESSES.USDC,
+        CONTRACTS.ADDRESSES.TEST_TOKEN,
         "1000"
     );
-    await commandManager.execute("allowance", bot, CONTRACTS.ADDRESSES.USDC);
-    // start bot
-    startBot(bot);
-    console.log("bot is running", bot.isRunning);
+    await commandManager.execute(
+        "allowance",
+        bot,
+        CONTRACTS.ADDRESSES.TEST_TOKEN
+    );
 
-    // stop bot
+    // Test bot lifecycle
+    startBot(bot);
+    console.log("Bot is running:", bot.isRunning);
+
     stopBot(bot);
-    console.log("bot is running", bot.isRunning);
+    console.log("Bot is running:", bot.isRunning);
 
     console.log("=== Testing Trading Bot completed ===");
 }
 
+/**
+ * Main Application Entry Point
+ *
+ * Initializes the application and runs all tests
+ *
+ * @returns {Promise<void>}
+ */
 async function main() {
     await testConnection();
     await testBot();
 }
 
+// Start the application
 main();

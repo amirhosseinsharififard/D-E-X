@@ -1,269 +1,191 @@
-# ربات معاملاتی DEX با قابلیت معاملات آتی
+# DEX Trading Bot
 
-## 📋 توضیحات پروژه
+A comprehensive trading bot for decentralized exchanges (DEX) built with ethers.js v6 and Hardhat for local development.
 
-این پروژه یک ربات معاملاتی پیشرفته برای صرافی‌های غیرمتمرکز (DEX) است که قابلیت‌های زیر را ارائه می‌دهد:
+## 🚀 Features
 
-- **معاملات خودکار**: خرید و فروش توکن‌ها در صرافی‌های غیرمتمرکز
-- **معاملات آتی**: باز کردن و بستن پوزیشن‌های آتی با اهرم
-- **نظارت Real-time**: نظارت بر تراکنش‌ها و بلاک‌های جدید
-- **مدیریت کیف پول**: مدیریت موجودی و تایید توکن‌ها
-- **پشتیبانی از چندین شبکه**: Ethereum Mainnet، Sepolia Testnet و Optimism
+- **ETH to Token Swaps**: Buy any ERC-20 token with ETH
+- **Token to ETH Swaps**: Sell any ERC-20 token for ETH
+- **Command-Based System**: Dynamic command registration and execution
+- **Slippage Protection**: 5% slippage protection on all trades
+- **Deadline Management**: 3-minute deadline for all transactions
+- **Error Handling**: Comprehensive error handling for all operations
+- **Contract Integration**: Full ERC-20 and Uniswap V2 integration
+- **Real-time Monitoring**: Live balance and transaction tracking
 
-## 🚀 ویژگی‌های کلیدی
+## 📋 Prerequisites
 
-### 🔄 معاملات DEX
+- Node.js (v16 or higher)
+- npm or yarn
+- Hardhat local network running
 
-- تبدیل ETH به توکن‌های ERC-20
-- تبدیل توکن‌ها به ETH
-- تبدیل مستقیم بین توکن‌ها
-- محاسبه خودکار slippage tolerance
-- مدیریت گاز و قیمت‌گذاری
+## 🛠️ Installation
 
-### 📈 معاملات آتی
-
-- باز کردن پوزیشن‌های لانگ و شورت
-- تنظیم اهرم دلخواه
-- بستن پوزیشن‌ها
-- نظارت بر وضعیت پوزیشن‌ها
-
-### 🔍 نظارت و مانیتورینگ
-
-- نظارت بر تراکنش‌های در انتظار
-- دریافت اطلاع از بلاک‌های جدید
-- نمایش وضعیت کیف پول
-- لاگ‌گیری کامل از عملیات
-
-## 🛠️ تکنولوژی‌های استفاده شده
-
-- **Ethers.js v6**: کتابخانه اصلی برای تعامل با بلاک‌چین
-- **Hardhat**: فریمورک توسعه قراردادهای هوشمند
-- **TypeScript**: زبان برنامه‌نویسی با پشتیبانی از تایپ
-- **WebSocket**: اتصال Real-time به شبکه
-- **Node.js**: محیط اجرای JavaScript
-
-## 📦 نصب و راه‌اندازی
-
-### پیش‌نیازها
-
-- Node.js (نسخه 16 یا بالاتر)
-- npm یا yarn
-- کلید خصوصی کیف پول اتریوم
-- URL RPC (Infura، Alchemy یا ارائه‌دهنده دیگر)
-
-### مراحل نصب
-
-1. **کلون کردن پروژه**
+1. Clone the repository:
 
 ```bash
 git clone <repository-url>
 cd ethers.js
 ```
 
-2. **نصب وابستگی‌ها**
+2. Install dependencies:
 
 ```bash
 npm install
 ```
 
-3. **پیکربندی متغیرهای محیطی**
-   فایل `.env` ایجاد کنید:
+3. Start Hardhat local network:
 
-```env
-SEPOLIA_RPC_URL=your_rpc_url_here
-SEPOLIA_PRIVATE_KEY=your_private_key_here
+```bash
+npx hardhat node
 ```
 
-4. **پیکربندی ربات**
-   فایل `index.js` را ویرایش کنید و مقادیر زیر را تنظیم کنید:
-
-```javascript
-const config = {
-  rpcUrl: "YOUR_INFURA_OR_ALCHEMY_URL",
-  wsUrl: "YOUR_WEBSOCKET_URL",
-  privateKey: "YOUR_PRIVATE_KEY",
-  // سایر تنظیمات...
-};
-```
-
-5. **اجرای ربات**
+4. Run the bot:
 
 ```bash
 node index.js
 ```
 
-## ⚙️ پیکربندی
+## 🎯 Usage
 
-### تنظیمات اصلی
+### Basic Commands
+
+| Command   | Description                 | Usage     |
+| --------- | --------------------------- | --------- |
+| `balance` | Get wallet ETH balance      | `balance` |
+| `status`  | Get complete wallet status  | `status`  |
+| `help`    | Show all available commands | `help`    |
+
+### Trading Commands
+
+| Command | Description        | Usage                               |
+| ------- | ------------------ | ----------------------------------- |
+| `buy`   | Buy token with ETH | `buy <tokenAddress> <ethAmount>`    |
+| `sell`  | Sell token for ETH | `sell <tokenAddress> <tokenAmount>` |
+
+### Token Management Commands
+
+| Command     | Description            | Usage                             |
+| ----------- | ---------------------- | --------------------------------- |
+| `approve`   | Approve token spending | `approve <tokenAddress> <amount>` |
+| `allowance` | Check token allowance  | `allowance <tokenAddress>`        |
+
+## 📁 Project Structure
+
+```
+ethers.js/
+├── index.js              # Main application file
+├── package.json          # Dependencies and scripts
+├── hardhat.config.ts     # Hardhat configuration
+├── contracts/            # Solidity contracts
+│   └── TestToken.sol     # Test ERC-20 token
+├── scripts/              # Deployment scripts
+│   └── deploy.js         # Contract deployment script
+├── ROADMAP.md            # Development roadmap
+├── FUNCTIONS.md          # Functions and capabilities
+└── README.md             # This file
+```
+
+## 🔧 Configuration
+
+### Network Configuration
 
 ```javascript
 const config = {
-  // شبکه
-  rpcUrl: "YOUR_RPC_URL",
-  wsUrl: "YOUR_WEBSOCKET_URL",
-
-  // کیف پول
-  privateKey: "YOUR_PRIVATE_KEY",
-
-  // آدرس‌های قرارداد
-  routerAddress: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", // Uniswap V2
-  wethAddress: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-  usdcAddress: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-
-  // تنظیمات گاز
-  gasLimit: 300000,
-  gasPrice: ethers.utils.parseUnits("30", "gwei"),
-
-  // تنظیمات معامله
-  slippageTolerance: 1, // 1%
-  tradeAmount: ethers.utils.parseUnits("0.1", "ether"),
+  rpcUrl: "http://localhost:8545", // Hardhat local network
+  privateKey: "0x...", // Wallet private key
+  routerAddress: "0x...", // Uniswap V2 Router
+  wethAddress: "0x...", // Wrapped ETH
 };
 ```
 
-### شبکه‌های پشتیبانی شده
-
-- **Ethereum Mainnet**: شبکه اصلی اتریوم
-- **Sepolia Testnet**: شبکه تست اتریوم
-- **Optimism**: شبکه Layer 2
-- **Hardhat Local**: شبکه محلی برای توسعه
-
-## 📚 نحوه استفاده
-
-### مثال‌های پایه
-
-#### 1. خرید توکن با ETH
+### Contract Addresses
 
 ```javascript
-await tradingBot.buyTokenWithETH(tokenAddress, ethAmount);
+ADDRESSES: {
+    ROUTER: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", // Uniswap V2 Router
+    WETH: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // Wrapped ETH
+    USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USD Coin
+    TEST_TOKEN: "0x5FbDB2315678afecb367f032d93F642f64180aa3", // Test token
+}
 ```
 
-#### 2. فروش توکن برای ETH
+## 🧪 Testing
+
+The bot includes comprehensive testing functionality:
 
 ```javascript
-await tradingBot.sellTokenForETH(tokenAddress, tokenAmount);
+// Test connection
+await testConnection();
+
+// Test all commands
+await testBot();
 ```
 
-#### 3. تبدیل بین توکن‌ها
+## 📊 Development Status
 
-```javascript
-await tradingBot.swapTokens(fromTokenAddress, toTokenAddress, amount);
-```
+### ✅ Completed Features
 
-#### 4. باز کردن پوزیشن آتی
+- [x] Basic system setup
+- [x] Contract integration
+- [x] Trading commands
+- [x] Command system
+- [x] Error handling
+- [x] Slippage protection
+- [x] Deadline management
 
-```javascript
-const result = await tradingBot.openFuturesPosition(
-  marketAddress,
-  collateralAmount,
-  true, // لانگ
-  5 // اهرم 5x
-);
-```
+### 🔄 In Development
 
-#### 5. بستن پوزیشن آتی
+- [ ] Advanced trading features
+- [ ] Multi-token support
+- [ ] Gas optimization
+- [ ] Price impact analysis
 
-```javascript
-await tradingBot.closeFuturesPosition(positionId);
-```
+### 📋 Planned Features
 
-### مدیریت موجودی
+- [ ] Futures trading system
+- [ ] Web interface
+- [ ] Automated strategies
+- [ ] Performance analytics
 
-```javascript
-// دریافت موجودی همه توکن‌ها
-const balances = await tradingBot.getAllBalances();
+## 🛡️ Security Features
 
-// نمایش وضعیت کیف پول
-await tradingBot.displayStatus();
-```
+- **Private Key Management**: Secure private key handling
+- **Slippage Protection**: Prevents excessive slippage losses
+- **Deadline Protection**: Prevents stale transactions
+- **Balance Validation**: Ensures sufficient funds before trading
+- **Approval Management**: Proper token approval handling
 
-## 🔒 امنیت
+## 📈 Performance
 
-### نکات مهم امنیتی
+- **Async/Await**: Non-blocking operations
+- **Error Recovery**: Graceful error handling
+- **Transaction Optimization**: Efficient gas usage
+- **Real-time Updates**: Live balance and status updates
 
-1. **کلید خصوصی**: هرگز کلید خصوصی را در کد قرار ندهید
-2. **متغیرهای محیطی**: از فایل `.env` برای ذخیره اطلاعات حساس استفاده کنید
-3. **تست**: همیشه ابتدا در شبکه تست آزمایش کنید
-4. **مقدار معامله**: با مقادیر کم شروع کنید
-5. **نظارت**: همیشه بر عملکرد ربات نظارت داشته باشید
+## 🤝 Contributing
 
-### بهترین روش‌ها
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-- استفاده از کیف پول جداگانه برای ربات
-- تنظیم محدودیت‌های معاملاتی
-- نظارت مداوم بر لاگ‌ها
-- پشتیبان‌گیری منظم از تنظیمات
+## 📄 License
 
-## 🧪 تست
+This project is licensed under the MIT License.
 
-### اجرای تست‌ها
+## 📞 Support
 
-```bash
-npm test
-```
+For support and questions, please open an issue in the repository.
 
-### تست در شبکه محلی
+## 🔗 Links
 
-```bash
-npx hardhat node
-npx hardhat run scripts/deploy.js --network localhost
-```
-
-## 📊 مانیتورینگ و لاگ‌گیری
-
-ربات اطلاعات زیر را لاگ می‌کند:
-
-- وضعیت اتصال به شبکه
-- موجودی کیف پول
-- تراکنش‌های ارسالی و دریافتی
-- خطاها و استثناها
-- وضعیت پوزیشن‌های آتی
-
-## 🚨 عیب‌یابی
-
-### مشکلات رایج
-
-1. **خطای اتصال RPC**
-
-   - بررسی URL RPC
-   - بررسی اتصال اینترنت
-   - بررسی محدودیت‌های API
-
-2. **خطای گاز ناکافی**
-
-   - افزایش gasLimit
-   - افزایش gasPrice
-   - بررسی موجودی ETH
-
-3. **خطای تایید توکن**
-   - بررسی allowance
-   - اجرای مجدد approve
-   - بررسی آدرس router
-
-## 🤝 مشارکت
-
-برای مشارکت در پروژه:
-
-1. Fork کنید
-2. شاخه جدید ایجاد کنید
-3. تغییرات را commit کنید
-4. Pull Request ارسال کنید
-
-## 📄 مجوز
-
-این پروژه تحت مجوز ISC منتشر شده است.
-
-## ⚠️ هشدار
-
-این نرم‌افزار برای اهداف آموزشی و تحقیقاتی ارائه شده است. استفاده از آن در معاملات واقعی با ریسک همراه است. همیشه قبل از استفاده در شبکه اصلی، به طور کامل تست کنید.
-
-## 📞 پشتیبانی
-
-برای سوالات و پشتیبانی:
-
-- GitHub Issues
-- ایمیل: [your-email@example.com]
-- تلگرام: [@your-telegram]
+- [ROADMAP.md](ROADMAP.md) - Development roadmap
+- [FUNCTIONS.md](FUNCTIONS.md) - Functions and capabilities
+- [Hardhat Documentation](https://hardhat.org/docs)
+- [Ethers.js Documentation](https://docs.ethers.org/v6/)
 
 ---
 
-**نکته**: این ربات در حال توسعه است و ممکن است تغییرات زیادی داشته باشد. همیشه آخرین نسخه را استفاده کنید.
+**Note**: This bot is for educational and development purposes. Use at your own risk in production environments.
