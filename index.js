@@ -293,6 +293,100 @@ commandManager.register("help", "Show available commands", async() => {
     commandManager.list();
 });
 
+// ==== register  trading commands ====
+commandManager.register(
+    "buy",
+    "Buy token with ETH",
+    async(bot, tokenAddress, ethAmount) => {
+        if (!tokenAddress || !ethAmount) {
+            console.error("Usage: buy <tokenAddress> <ethAmount>");
+            return;
+        }
+
+        const resualt = await buyTokenWithETH(
+            bot,
+            tokenAddress,
+            parseFloat(ethAmount)
+        );
+        if (resualt) {
+            console.log("Buy order successful!");
+        } else {
+            console.log("buy order failed");
+        }
+    }
+);
+
+commandManager.register(
+    "sell",
+    "Sell token for ETH",
+    async(bot, tokenAddress, tokenAmount) => {
+        if (!tokenAddress || !tokenAmount) {
+            console.error("Usage: sell <tokenAddress> <tokenAmount>");
+            return;
+        }
+        const resualt = await sellTokenForETH(
+            bot,
+            tokenAddress,
+            parseFloat(tokenAmount)
+        );
+        if (resualt) {
+            console.log("sell order successful");
+        } else {
+            console.log("Sell order failed");
+        }
+    }
+);
+
+commandManager.register(
+    "approve",
+    "Approve token spending",
+    async(bot, tokenAddress, amount) => {
+        if (!tokenAddress || !amount) {
+            console.error("Usage: approve <tokenAddress> <amount>");
+            return;
+        }
+
+        try {
+            const contractManager = createContractManager(bot.provider, bot.wallet);
+            const token = contractManager.getTokenContract(tokenAddress);
+            const amountWei = ethers.parseUnits(amount.toString(), 18);
+
+            console.log(`Approving ${amount} tokens...`);
+
+            const tx = await token.approve(CONTRACTS.ADDRESSES.ROUTER, amountWei);
+            await tx.wait();
+            console.log("Approval successful");
+        } catch (error) {
+            console.error("Error approving token:", error.message);
+            return null;
+        }
+    }
+);
+
+commandManager.register(
+    "allowance",
+    "check token allowance",
+    async(bot, tokenAddress) => {
+        if (!tokenAddress) {
+            console.error("Usage: allowance <tokenAddress>");
+            return;
+        }
+        try {
+            const contractManager = createContractManager(bot.provider, bot.wallet);
+            const token = contractManager.getTokenContract(tokenAddress);
+
+            const allowance = await token.allowance(
+                bot.wallet.address,
+                CONTRACTS.ADDRESSES.ROUTER
+            );
+            console.log(`Allowance: ${ethers.formatUnits(allowance, 18)} tokens`);
+        } catch (error) {
+            console.error("Error checking allowance:", error.message);
+        }
+    }
+);
+
+// ==== test bot ====
 async function testBot() {
     console.log("\n=== Testing Trading Bot ===");
 
@@ -304,6 +398,18 @@ async function testBot() {
     await commandManager.execute("balance", bot);
     await commandManager.execute("status", bot);
 
+    // Test trading commands (with USDC address)
+    console.log("\n--- Testing Trading Commands ---");
+    console.log("\n--- Testing Trading Commands ---");
+    console.log("\n--- Testing Trading Commands ---");
+    await commandManager.execute("allowance", bot, CONTRACTS.ADDRESSES.USDC);
+    await commandManager.execute(
+        "approve",
+        bot,
+        CONTRACTS.ADDRESSES.USDC,
+        "1000"
+    );
+    await commandManager.execute("allowance", bot, CONTRACTS.ADDRESSES.USDC);
     // start bot
     startBot(bot);
     console.log("bot is running", bot.isRunning);
