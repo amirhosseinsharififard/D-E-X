@@ -319,7 +319,7 @@ async function buyTokenWithETH(bot, tokenAddress, ethAmount) {
 
         // Get expected output amount
         const amountsOut = await router.getAmountsOut(amountIn, path);
-        const amountOutMin = (amountsOut[1] * 95 n) / 100 n; // 5% slippage protection
+        const amountOutMin = (amountsOut[1] * 95n) / 100n; // 5% slippage protection
 
         console.log(
             `Expected to receive: ${ethers.formatUnits(amountsOut[1], 18)} tokens`
@@ -385,7 +385,7 @@ async function sellTokenForETH(bot, tokenAddress, tokenAmount) {
 
         // Get expected output amount
         const amountsOut = await router.getAmountsOut(amountIn, path);
-        const amountOutMin = (amountsOut[1] * 95 n) / 100 n; // 5% slippage protection
+        const amountOutMin = (amountsOut[1] * 95n) / 100n; // 5% slippage protection
 
         console.log(
             `Expected to receive: ${ethers.formatEther(amountsOut[1])} ETH`
