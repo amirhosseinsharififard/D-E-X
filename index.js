@@ -90,6 +90,104 @@ function stopBot(bot) {
 }
 
 /**
+ * Multi-Token Management Functions
+ */
+
+/**
+ * Add token to registry
+ *
+ * @param {Object} bot - Trading bot instance
+ * @param {string} address - Token contract address
+ * @param {string} symbol - Token symbol (e.g., 'USDC', 'DAI')
+ * @param {number} decimals - Token decimals (default: 18)
+ */
+
+function addTokenToRegistry(bot, address, symbol, decimals = 18) {
+    bot.tokens.set(address, {
+        symbol: symbol.toUpperCase(),
+        decimals: decimals,
+        address: address,
+    });
+    console.log(`Added token: ${symbol} (${address})`);
+}
+
+/**
+ * Get token info by address
+ *
+ * @param {Object} bot - Trading bot instance
+ * @param {string} address - Token address
+ * @returns {Object|null} Token info or null if not found
+ */
+function getTokenInfo(bot, address) {
+    return bot.tokens.get(address) || null;
+}
+
+/**
+ * Get all registered tokens
+ *
+ * @param {Object} bot - Trading bot instance
+ * @returns {Array} Array of token objects
+ */
+function getAllTokens(bot) {
+    return Array.from(bot.tokens.values());
+}
+
+/**
+ * Check if token is registered
+ *
+ * @param {Object} bot - Trading bot instance
+ * @param {string} address - Token address
+ * @returns {boolean} True if token is registered
+ */
+function hasToken(bot, address) {
+    return bot.tokens.has(address);
+}
+
+/**
+ * Advanced Slippage Management Functions
+ */
+
+/**
+ * Calculate optimal slippage based on market conditions
+ *
+ * @param {Object} bot - Trading bot instance
+ * @param {string} tokenAddress - Token address
+ * @param {bigint} amount - Trade amount
+ * @returns {Promise<number>} Optimal slippage percentage
+ */
+
+async function calculateOptimalSlippage(bot, tokenAddress, amount) {
+    try {
+        // Base slippage settings
+        const baseSlippage = 5; // 5% base slippage
+        const maxSlippage = 10; // 10% maximum slippage
+        const minSlippage = 1; // 1% minimum slippage
+
+        // Get market volatility (simplified calculation)
+        const volatility = await getMarketVolatility(bot, tokenAddress);
+
+        // Adjust slippage based on volatility
+        let slippage = baseSlippage;
+        if (volatility > 0.1) slippage += 2;
+        if (volatility > 0.2) slippage += 3;
+        if (volatility < 0.05) slippage -= 1;
+
+        // Adjust based on trade size
+        const amountEth = Number(ethers.formatEther(amount));
+        if (amountEth > 1) slippage += 1; //large trades
+        if (amountEth > 5) slippage += 2; //very large trades
+        slippage = Math.max(minSlippage, Math.min(maxSlippage, slippage));
+        console.log(
+            `📊 Slippage calculation: Volatility=${(volatility * 100).toFixed(2)}%, Trade size=${amountETH}ETH, Slippage=${slippage}%`
+        );
+        return slippage;
+    } catch (error) {
+        console.error('Error calculating slippage:', error.message);
+        return 5; // Default 5% slippage
+    }
+}
+
+/**
  * Get wallet ETH balance
  *
  * @param {Object} bot - Trading bot instance
@@ -499,6 +597,63 @@ commandManager.register('allowance', 'Check token allowance', async(bot, tokenAd
     }
 });
 
+// Add token to registry
+commandManager.register('addToken', 'add token to registry', async(bot, tokenAddress, symbol) => {
+    if (!tokenAddress || !symbol) {
+        console.error('Usage: addtoken <tokenAddress> <symbol>');
+        return;
+    }
+    addTokenToRegistry(bot, tokenAddress, symbol);
+});
+
+/**
+ * Multi-Token Commands
+ */
+commandManager.register('tokens', 'List all registered tokens', async(bot) => {
+    const tokens = getAllTokens(bot);
+
+    if (tokens.length === 0) {
+        console.log("no token registered. use 'addtoken' to add a token");
+        return;
+    }
+
+    console.log('\n === Registered Tokens ===');
+
+    tokens.forEach((token, index) => {
+        console.log(`${index + 1}. ${token.symbol}`);
+        console.log(`     Address: ${token.address}`);
+        console.log(`     Decimals: ${token.decimals}`);
+        console.log('');
+    });
+    console.log('========================');
+});
+
+// Get token balance
+commandManager.register('tokenbalance', 'Get token balance', async(bot, tokenAddress) => {
+    if (!tokenAddress) {
+        console.error('Usage: tokenbalance <tokenAddress>');
+        return;
+    }
+
+    try {
+        const contractManager = createContractManager(bot.provider, bot.wallet);
+        const token = contractManager.getTokenContract(tokenAddress);
+
+        const balance = await token.balanceOf(bot.wallet.address);
+        const tokenInfo = getTokenInfo(bot, tokenAddress);
+
+        if (tokenInfo) {
+            const formattedBalance = ethers.formatUnits(balance, tokenInfo.decimals);
+            console.log(`${tokenInfo.symbol} balance: ${formattedBalance}`);
+        } else {
+            const formattedBalance = ethers.formatUnits(balance, 18);
+            console.log(`Token Balance: ${formattedBalance}`);
+        }
+    } catch (error) {
+        console.error('Error getting token balance:', error.message);
+    }
+});
+
 /**
  * Test Trading Bot
  *
@@ -546,6 +701,9 @@ async function main() {
     await testConnection();
     await testBot();
 }
+
+// Start the application
+main();
 
 // Start the application
 main();
