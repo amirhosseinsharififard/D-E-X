@@ -178,7 +178,7 @@ async function calculateOptimalSlippage(bot, tokenAddress, amount) {
         if (amountEth > 5) slippage += 2; //very large trades
         slippage = Math.max(minSlippage, Math.min(maxSlippage, slippage));
         console.log(
-            `📊 Slippage calculation: Volatility=${(volatility * 100).toFixed(2)}%, Trade size=${amountETH}ETH, Slippage=${slippage}%`
+            `📊 Slippage calculation: Volatility=${(volatility * 100).toFixed(2)}%, Trade size=${amountEth}ETH, Slippage=${slippage}%`
         );
         return slippage;
     } catch (error) {
