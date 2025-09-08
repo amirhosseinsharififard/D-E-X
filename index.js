@@ -66,7 +66,142 @@ function createTradingBot(provider, wallet, config) {
         wallet: wallet, // Wallet for transactions
         config: config, // Bot configuration
         isRunning: false, // Bot status (stopped/running)
+        tokens: new Map(), // Tokens registry
     };
+}
+
+/**
+ * Get market volatility for a token (simplified calculation)
+ *
+ * @param {Object} bot - Trading bot instance
+ * @param {string} tokenAddress - Token address
+ * @returns {Promise<number>} Volatility percentage (0-1)
+ */
+async function getMarketVolatility(bot, tokenAddress) {
+    try {
+        //simplified volatility calculation based on recent price changes
+        // in a real implementation you would  fetch historical price data and calculate more accurate volatility
+        const contractManager = createContractManager(bot.provider, bot.wallet);
+        const router = contractManager.getRouterContract();
+
+        //get current price
+        const path = [CONTRACTS.ADDRESSES.WETH, tokenAddress];
+        const amountsOut = await router.getAmountsOut(ethers.parseEther('1'), path);
+        const currentPrice = Number(ethers.formatUnits(amountsOut[1], 18));
+
+        //simulate volatility based on price (simplified)
+        // in reality you'd calculate this from historicl data
+        const volatility = Math.min(0.3, Math.max(0.01, currentPrice * 0.1));
+        return volatility;
+    } catch (error) {
+        console.error('Error calculating volatility:', error.message);
+        return 0.05; // Default 5% volatility
+    }
+}
+
+/**
+ * Get token balance with proper decimals
+ *
+ * @param {Object} bot - Trading bot instance
+ * @param {string} tokenAddress - Token address
+ * @returns {Promise<string>} Formatted token balance
+ */
+async function getTokenBalance(bot, tokenAddress) {
+    try {
+        const contractManager = createContractManager(bot.provider, bot.wallet);
+        const token = contractManager.getTokenContract(tokenAddress);
+        const tokenInfo = getTokenInfo(bot, tokenAddress);
+
+        const balance = await token.balanceOf(bot.wallet.address);
+        const decimals = tokenInfo ? tokenInfo.decimals : 18;
+
+        return ethers.formatUnits(balance, decimals);
+    } catch (error) {
+        console.error('Error getting token balance:', error.message);
+        return 0;
+    }
+}
+
+/**
+ * Get all token balances for registered tokens
+ *
+ * @param {Object} bot - Trading bot instance
+ * @returns {Promise<Array>} Array of token balance objects
+ */
+async function getAllTokenBalances(bot) {
+    try {
+        const tokens = getAllTokens(bot);
+        const balances = [];
+
+        for (const token of tokens) {
+            const balance = await getTokenBalance(bot, token.address);
+            balances.push({ ...token, balance: balance });
+        }
+
+        return balances;
+    } catch (error) {
+        console.error('Error getting all token balances:', error.message);
+        return [];
+    }
+}
+
+/**
+ * Enhanced trading function with multi-token support
+ *
+ * @param {Object} bot - Trading bot instance
+ * @param {string} tokenAddress - Token address
+ * @param {number} ethAmount - Amount of ETH to spend
+ * @param {number} customSlippage - Custom slippage percentage (optional)
+ * @returns {Promise<Object|null>} Transaction receipt or null if failed
+ */
+async function buyTokenWithETHAdvanced(bot, tokenAddress, ethAmount, customSlippage = null) {
+    try {
+        console.log(`buying token with ${ethAmount} ETH (Advanced)`);
+        const contractManager = createContractManager(bot.provider, bot.wallet);
+        const router = contractManager.getRouterContract();
+
+        //convert ETH amount to wei
+        const amountIn = ethers.parseEther(ethAmount.toString());
+
+        // calculate optimal slippage if not provided
+        const slippage = customSlippage || (await calculateOptimalSlippage(bot, tokenAddress, amountIn));
+
+        // Trading path:ETH-> WETH -> token
+        const path = [CONTRACTS.ADDRESSES.WETH, tokenAddress];
+
+        // get expected output amount
+        const amountsOut = await router.getAmountsOut(amountIn, path);
+        const slippagePercent = ethers.parseUnits((100 - slippage).toString(), 2);
+        const amountOutMin = (amountsOut[1] * slippagePercent) / ethers.parseUnits(`100`, 2);
+
+        const tokenInfo = getTokenInfo(bot, tokenAddress);
+        const tokenSymbol = tokenInfo ? tokenInfo.symbol : 'Token';
+
+        console.log(`expected to receive ${ethers.formatUnits(amountsOut[1], 18)} ${tokenSymbol}`);
+        console.log(`using ${slippage}% slippage protection`);
+
+        //set deadline (3minutes for now)
+        const deadline = Math.floor(Date.now() / 1000) + 180;
+
+        //expecte swap transaction
+        const tx = await router.swapExactETHForTokens(amountOutMin, path, bot.wallet.address, deadline, {
+            value: amountIn,
+        });
+
+        console.log(`Transaction sent: ${tx.hash}`);
+        const receipt = await tx.wait();
+        console.log(`Transaction confirmed: ${receipt.blockNumber}`);
+
+        // Update token registry if not already registered
+        if (!hasToken(bot, tokenAddress)) {
+            addTokenToRegistry(bot, tokenAddress, tokenSymbol);
+        }
+
+        return receipt;
+    } catch (error) {
+        console.error('Error buying token:', error.message);
+        return null;
+    }
 }
 
 /**
@@ -507,18 +642,18 @@ async function sellTokenForETH(bot, tokenAddress, tokenAmount) {
  */
 
 // Get wallet ETH balance
-commandManager.register('balance', 'Get wallet balance', async(bot) => {
+commandManager.register('balance', 'Get wallet balance', async (bot) => {
     const balance = await getBalance(bot);
     console.log(`Current balance: ${balance} ETH`);
 });
 
 // Display complete wallet status
-commandManager.register('status', 'Get wallet status', async(bot) => {
+commandManager.register('status', 'Get wallet status', async (bot) => {
     await displayWalletInfo(bot);
 });
 
 // Show all available commands
-commandManager.register('help', 'Show available commands', async() => {
+commandManager.register('help', 'Show available commands', async () => {
     commandManager.list();
 });
 
@@ -529,7 +664,7 @@ commandManager.register('help', 'Show available commands', async() => {
  */
 
 // Buy token with ETH
-commandManager.register('buy', 'Buy token with ETH', async(bot, tokenAddress, ethAmount) => {
+commandManager.register('buy', 'Buy token with ETH', async (bot, tokenAddress, ethAmount) => {
     if (!tokenAddress || !ethAmount) {
         console.error('Usage: buy <tokenAddress> <ethAmount>');
         return;
@@ -544,7 +679,7 @@ commandManager.register('buy', 'Buy token with ETH', async(bot, tokenAddress, et
 });
 
 // Sell token for ETH
-commandManager.register('sell', 'Sell token for ETH', async(bot, tokenAddress, tokenAmount) => {
+commandManager.register('sell', 'Sell token for ETH', async (bot, tokenAddress, tokenAmount) => {
     if (!tokenAddress || !tokenAmount) {
         console.error('Usage: sell <tokenAddress> <tokenAmount>');
         return;
@@ -558,7 +693,7 @@ commandManager.register('sell', 'Sell token for ETH', async(bot, tokenAddress, t
 });
 
 // Approve token spending for router
-commandManager.register('approve', 'Approve token spending', async(bot, tokenAddress, amount) => {
+commandManager.register('approve', 'Approve token spending', async (bot, tokenAddress, amount) => {
     if (!tokenAddress || !amount) {
         console.error('Usage: approve <tokenAddress> <amount>');
         return;
@@ -581,7 +716,7 @@ commandManager.register('approve', 'Approve token spending', async(bot, tokenAdd
 });
 
 // Check token allowance for router
-commandManager.register('allowance', 'Check token allowance', async(bot, tokenAddress) => {
+commandManager.register('allowance', 'Check token allowance', async (bot, tokenAddress) => {
     if (!tokenAddress) {
         console.error('Usage: allowance <tokenAddress>');
         return;
@@ -598,7 +733,7 @@ commandManager.register('allowance', 'Check token allowance', async(bot, tokenAd
 });
 
 // Add token to registry
-commandManager.register('addToken', 'add token to registry', async(bot, tokenAddress, symbol) => {
+commandManager.register('addToken', 'add token to registry', async (bot, tokenAddress, symbol) => {
     if (!tokenAddress || !symbol) {
         console.error('Usage: addtoken <tokenAddress> <symbol>');
         return;
@@ -609,7 +744,7 @@ commandManager.register('addToken', 'add token to registry', async(bot, tokenAdd
 /**
  * Multi-Token Commands
  */
-commandManager.register('tokens', 'List all registered tokens', async(bot) => {
+commandManager.register('tokens', 'List all registered tokens', async (bot) => {
     const tokens = getAllTokens(bot);
 
     if (tokens.length === 0) {
@@ -629,7 +764,7 @@ commandManager.register('tokens', 'List all registered tokens', async(bot) => {
 });
 
 // Get token balance
-commandManager.register('tokenbalance', 'Get token balance', async(bot, tokenAddress) => {
+commandManager.register('tokenbalance', 'Get token balance', async (bot, tokenAddress) => {
     if (!tokenAddress) {
         console.error('Usage: tokenbalance <tokenAddress>');
         return;
@@ -651,6 +786,72 @@ commandManager.register('tokenbalance', 'Get token balance', async(bot, tokenAdd
         }
     } catch (error) {
         console.error('Error getting token balance:', error.message);
+    }
+});
+
+// get all token balances
+commandManager.register('allbalances', 'Get all registered token balances', async (bot) => {
+    const balances = await getAllTokenBalances(bot);
+
+    if (balances.length === 0) {
+        console.log('No tokens registered. use "addtoken" to add a token');
+        return;
+    }
+    console.log('\n === AllToken Balances ===');
+    balances.forEach((token, index) => {
+        console.log(`${index + 1}. ${token.symbol}: ${token.balance}`);
+        console.log(`     Address: ${token.address}`);
+    });
+    console.log('========================');
+});
+
+//Adanced buy with custome slippage
+commandManager.register(
+    'buyadvanced',
+    'Buy token with custome slippage',
+    async (bot, tokenAddress, ethAmount, slippage) => {
+        if (!tokenAddress || !ethAmount) {
+            console.error('Usage: buyadvanced <tokenAddress> <ethAmount> [slippage]');
+            return;
+        }
+
+        const customSlippage = slippage ? parseFloat(slippage) : null;
+        const result = await buyTokenWithETHAdvanced(bot, tokenAddress, parseFloat(ethAmount), customSlippage);
+        if (result) {
+            console.log('Advanced buy order successful!');
+        } else {
+            console.log('Advanced buy order failed');
+        }
+    }
+);
+
+// Get market volatility
+commandManager.register('volatility', 'Get market volatility for token', async (bot, tokenAddress) => {
+    if (!tokenAddress) {
+        console.error('Usage: volatility <tokenAddress>');
+        return;
+    }
+
+    try {
+        const volatility = await getMarketVolatility(bot, tokenAddress);
+        console.log(`Market volatility: ${(volatility * 100).toFixed(2)}%`);
+    } catch (error) {
+        console.error('Error getting market volatility:', error.message);
+    }
+});
+
+// Calculate optimal slippage
+commandManager.register('slippage', 'Calculate optimal slippage for trade', async (bot, tokenAddress, amount) => {
+    if (!tokenAddress || !amount) {
+        console.error('Usage: slippage <tokenAddress> <amount>');
+        return;
+    }
+    try {
+        const amountWei = ethers.parseEther(amount);
+        const optimalSlippage = await calculateOptimalSlippage(bot, tokenAddress, amountWei);
+        console.log(`Optimal slippage: ${optimalSlippage}%`);
+    } catch (error) {
+        console.error('Error calculating slippage:', error.message);
     }
 });
 
@@ -690,6 +891,31 @@ async function testBot() {
     console.log('=== Testing Trading Bot completed ===');
 }
 
+async function testAdvancedFeatures() {
+    console.log('\n=== Testing Advanced multi-token Features ===');
+
+    const bot = createTradingBot(provider, wallet, config);
+
+    // Test multi-token registration
+    console.log('\n--- Testing Multi-Token Registration ---');
+    await commandManager.execute('addToken', bot, CONTRACTS.ADDRESSES.TEST_TOKEN, 'TEST');
+    await commandManager.execute('addToken', bot, CONTRACTS.ADDRESSES.USDC, 'USDC');
+    await commandManager.execute('tokens', bot);
+
+    // Test advanced commands
+    console.log('\n--- Testing Advanced Commands ---');
+    await commandManager.execute('allbalances', bot);
+    await commandManager.execute('volatility', bot, CONTRACTS.ADDRESSES.TEST_TOKEN);
+    await commandManager.execute('slippage', bot, CONTRACTS.ADDRESSES.TEST_TOKEN, '0.1');
+
+    // Test advanced trading
+    console.log('\n--- Testing Advanced Trading ---');
+
+    await commandManager.execute('buyadvanced', bot, CONTRACTS.ADDRESSES.TEST_TOKEN, '0.01', '3');
+
+    console.log('=== Advanced Features Testing Completed ===');
+}
+
 /**
  * Main Application Entry Point
  *
@@ -700,10 +926,8 @@ async function testBot() {
 async function main() {
     await testConnection();
     await testBot();
+    await testAdvancedFeatures();
 }
-
-// Start the application
-main();
 
 // Start the application
 main();
