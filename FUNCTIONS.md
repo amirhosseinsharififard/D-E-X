@@ -55,16 +55,28 @@ This document provides a comprehensive list of all implemented functions, featur
 | `approve`   | Approve token spending | `approve <tokenAddress> <amount>` | tokenAddress, amount |
 | `allowance` | Check token allowance  | `allowance <tokenAddress>`        | tokenAddress         |
 
+### Position Management Commands (Planned)
+
+| Command           | Description                      | Usage                                                                        | Parameters                                                    |
+| ----------------- | -------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `openposition`    | Open position with exit strategy | `openposition <token> <amount> <type> <stopLoss> <takeProfit> [maxHoldTime]` | tokenAddress, amount, type, stopLoss, takeProfit, maxHoldTime |
+| `positions`       | Show all open positions          | `positions`                                                                  | None                                                          |
+| `closeposition`   | Close specific position          | `closeposition <positionId>`                                                 | positionId                                                    |
+| `startmonitoring` | Start price monitoring           | `startmonitoring`                                                            | None                                                          |
+| `stopmonitoring`  | Stop price monitoring            | `stopmonitoring`                                                             | None                                                          |
+| `updatestop`      | Update stop loss                 | `updatestop <positionId> <newStopLoss>`                                      | positionId, newStopLoss                                       |
+| `updatetarget`    | Update take profit               | `updatetarget <positionId> <newTakeProfit>`                                  | positionId, newTakeProfit                                     |
+
 ## Configuration
 
 ### Network Configuration
 
 ```javascript
 const config = {
-  rpcUrl: "http://localhost:8545", // Hardhat local network
-  privateKey: "0x...", // Wallet private key
-  routerAddress: "0x...", // Uniswap V2 Router
-  wethAddress: "0x...", // Wrapped ETH
+    rpcUrl: 'http://localhost:8545', // Hardhat local network
+    privateKey: '0x...', // Wallet private key
+    routerAddress: '0x...', // Uniswap V2 Router
+    wethAddress: '0x...', // Wrapped ETH
 };
 ```
 
@@ -100,6 +112,10 @@ ADDRESSES: {
 
 ### 📋 Planned Features
 
+- **Smart Position Management**: Advanced position tracking with exit strategies
+- **Price Monitoring System**: Real-time price monitoring for position management
+- **Exit Strategy Engine**: Automated stop-loss, take-profit, and trailing stops
+- **Enhanced Data Persistence**: State saving and recovery system
 - **Futures Trading**: Leveraged position management
 - **Portfolio Management**: Multi-asset portfolio tracking
 - **Risk Management**: Advanced risk assessment tools
@@ -115,26 +131,48 @@ ADDRESSES: {
 const bot = createTradingBot(provider, wallet, config);
 
 // Check balance
-await commandManager.execute("balance", bot);
+await commandManager.execute('balance', bot);
 
 // Buy tokens
-await commandManager.execute("buy", bot, "0x...", "0.1");
+await commandManager.execute('buy', bot, '0x...', '0.1');
 
 // Sell tokens
-await commandManager.execute("sell", bot, "0x...", "100");
+await commandManager.execute('sell', bot, '0x...', '100');
 ```
 
 ### Advanced Usage
 
 ```javascript
 // Approve token spending
-await commandManager.execute("approve", bot, "0x...", "1000");
+await commandManager.execute('approve', bot, '0x...', '1000');
 
 // Check allowance
-await commandManager.execute("allowance", bot, "0x...");
+await commandManager.execute('allowance', bot, '0x...');
 
 // Get wallet status
-await commandManager.execute("status", bot);
+await commandManager.execute('status', bot);
+```
+
+### Position Management Usage (Planned)
+
+```javascript
+// Open position with exit strategy
+await commandManager.execute('openposition', bot, '0x...', '0.1', 'long', '0.05', '0.15', '24');
+
+// View open positions
+await commandManager.execute('positions', bot);
+
+// Close specific position
+await commandManager.execute('closeposition', bot, 'pos_1');
+
+// Start price monitoring
+await commandManager.execute('startmonitoring', bot);
+
+// Update stop loss
+await commandManager.execute('updatestop', bot, 'pos_1', '0.08');
+
+// Update take profit
+await commandManager.execute('updatetarget', bot, 'pos_1', '0.20');
 ```
 
 ## Error Handling

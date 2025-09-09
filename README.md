@@ -92,10 +92,10 @@ ethers.js/
 
 ```javascript
 const config = {
-  rpcUrl: "http://localhost:8545", // Hardhat local network
-  privateKey: "0x...", // Wallet private key
-  routerAddress: "0x...", // Uniswap V2 Router
-  wethAddress: "0x...", // Wrapped ETH
+    rpcUrl: 'http://localhost:8545', // Hardhat local network
+    privateKey: '0x...', // Wallet private key
+    routerAddress: '0x...', // Uniswap V2 Router
+    wethAddress: '0x...', // Wrapped ETH
 };
 ```
 
@@ -143,6 +143,10 @@ await testBot();
 
 ### 📋 Planned Features
 
+- [ ] **Smart Position Management System** - Advanced position tracking with exit strategies
+- [ ] **Price Monitoring System** - Real-time price monitoring for position management
+- [ ] **Exit Strategy Engine** - Automated stop-loss, take-profit, and trailing stops
+- [ ] **Enhanced Data Persistence** - State saving and recovery system
 - [ ] Futures trading system
 - [ ] Web interface
 - [ ] Automated strategies
@@ -183,6 +187,8 @@ For support and questions, please open an issue in the repository.
 
 - [ROADMAP.md](ROADMAP.md) - Development roadmap
 - [FUNCTIONS.md](FUNCTIONS.md) - Functions and capabilities
+- [SMART_POSITION_MANAGEMENT.md](SMART_POSITION_MANAGEMENT.md) - Smart Position Management System
+- [FUTURE_ENHANCEMENTS.md](FUTURE_ENHANCEMENTS.md) - Future enhancements and ideas
 - [Hardhat Documentation](https://hardhat.org/docs)
 - [Ethers.js Documentation](https://docs.ethers.org/v6/)
 

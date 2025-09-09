@@ -135,7 +135,7 @@ async function getAllTokenBalances(bot) {
 
         for (const token of tokens) {
             const balance = await getTokenBalance(bot, token.address);
-            balances.push({ ...token, balance: balance });
+            balances.push({...token, balance: balance });
         }
 
         return balances;
@@ -642,18 +642,18 @@ async function sellTokenForETH(bot, tokenAddress, tokenAmount) {
  */
 
 // Get wallet ETH balance
-commandManager.register('balance', 'Get wallet balance', async (bot) => {
+commandManager.register('balance', 'Get wallet balance', async(bot) => {
     const balance = await getBalance(bot);
     console.log(`Current balance: ${balance} ETH`);
 });
 
 // Display complete wallet status
-commandManager.register('status', 'Get wallet status', async (bot) => {
+commandManager.register('status', 'Get wallet status', async(bot) => {
     await displayWalletInfo(bot);
 });
 
 // Show all available commands
-commandManager.register('help', 'Show available commands', async () => {
+commandManager.register('help', 'Show available commands', async() => {
     commandManager.list();
 });
 
@@ -664,7 +664,7 @@ commandManager.register('help', 'Show available commands', async () => {
  */
 
 // Buy token with ETH
-commandManager.register('buy', 'Buy token with ETH', async (bot, tokenAddress, ethAmount) => {
+commandManager.register('buy', 'Buy token with ETH', async(bot, tokenAddress, ethAmount) => {
     if (!tokenAddress || !ethAmount) {
         console.error('Usage: buy <tokenAddress> <ethAmount>');
         return;
@@ -679,7 +679,7 @@ commandManager.register('buy', 'Buy token with ETH', async (bot, tokenAddress, e
 });
 
 // Sell token for ETH
-commandManager.register('sell', 'Sell token for ETH', async (bot, tokenAddress, tokenAmount) => {
+commandManager.register('sell', 'Sell token for ETH', async(bot, tokenAddress, tokenAmount) => {
     if (!tokenAddress || !tokenAmount) {
         console.error('Usage: sell <tokenAddress> <tokenAmount>');
         return;
@@ -693,7 +693,7 @@ commandManager.register('sell', 'Sell token for ETH', async (bot, tokenAddress, 
 });
 
 // Approve token spending for router
-commandManager.register('approve', 'Approve token spending', async (bot, tokenAddress, amount) => {
+commandManager.register('approve', 'Approve token spending', async(bot, tokenAddress, amount) => {
     if (!tokenAddress || !amount) {
         console.error('Usage: approve <tokenAddress> <amount>');
         return;
@@ -716,7 +716,7 @@ commandManager.register('approve', 'Approve token spending', async (bot, tokenAd
 });
 
 // Check token allowance for router
-commandManager.register('allowance', 'Check token allowance', async (bot, tokenAddress) => {
+commandManager.register('allowance', 'Check token allowance', async(bot, tokenAddress) => {
     if (!tokenAddress) {
         console.error('Usage: allowance <tokenAddress>');
         return;
@@ -733,7 +733,7 @@ commandManager.register('allowance', 'Check token allowance', async (bot, tokenA
 });
 
 // Add token to registry
-commandManager.register('addToken', 'add token to registry', async (bot, tokenAddress, symbol) => {
+commandManager.register('addToken', 'add token to registry', async(bot, tokenAddress, symbol) => {
     if (!tokenAddress || !symbol) {
         console.error('Usage: addtoken <tokenAddress> <symbol>');
         return;
@@ -744,7 +744,7 @@ commandManager.register('addToken', 'add token to registry', async (bot, tokenAd
 /**
  * Multi-Token Commands
  */
-commandManager.register('tokens', 'List all registered tokens', async (bot) => {
+commandManager.register('tokens', 'List all registered tokens', async(bot) => {
     const tokens = getAllTokens(bot);
 
     if (tokens.length === 0) {
@@ -764,7 +764,7 @@ commandManager.register('tokens', 'List all registered tokens', async (bot) => {
 });
 
 // Get token balance
-commandManager.register('tokenbalance', 'Get token balance', async (bot, tokenAddress) => {
+commandManager.register('tokenbalance', 'Get token balance', async(bot, tokenAddress) => {
     if (!tokenAddress) {
         console.error('Usage: tokenbalance <tokenAddress>');
         return;
@@ -790,7 +790,7 @@ commandManager.register('tokenbalance', 'Get token balance', async (bot, tokenAd
 });
 
 // get all token balances
-commandManager.register('allbalances', 'Get all registered token balances', async (bot) => {
+commandManager.register('allbalances', 'Get all registered token balances', async(bot) => {
     const balances = await getAllTokenBalances(bot);
 
     if (balances.length === 0) {
@@ -809,7 +809,7 @@ commandManager.register('allbalances', 'Get all registered token balances', asyn
 commandManager.register(
     'buyadvanced',
     'Buy token with custome slippage',
-    async (bot, tokenAddress, ethAmount, slippage) => {
+    async(bot, tokenAddress, ethAmount, slippage) => {
         if (!tokenAddress || !ethAmount) {
             console.error('Usage: buyadvanced <tokenAddress> <ethAmount> [slippage]');
             return;
@@ -826,7 +826,7 @@ commandManager.register(
 );
 
 // Get market volatility
-commandManager.register('volatility', 'Get market volatility for token', async (bot, tokenAddress) => {
+commandManager.register('volatility', 'Get market volatility for token', async(bot, tokenAddress) => {
     if (!tokenAddress) {
         console.error('Usage: volatility <tokenAddress>');
         return;
@@ -841,7 +841,7 @@ commandManager.register('volatility', 'Get market volatility for token', async (
 });
 
 // Calculate optimal slippage
-commandManager.register('slippage', 'Calculate optimal slippage for trade', async (bot, tokenAddress, amount) => {
+commandManager.register('slippage', 'Calculate optimal slippage for trade', async(bot, tokenAddress, amount) => {
     if (!tokenAddress || !amount) {
         console.error('Usage: slippage <tokenAddress> <amount>');
         return;

@@ -82,6 +82,22 @@ A comprehensive trading bot for decentralized exchanges (DEX) built with ethers.
 - [ ] Risk management tools
 - [ ] Advanced portfolio management
 
+### 📋 Phase 2.5: Smart Position Management System (PLANNED)
+
+- [ ] **Smart Position Manager**: Advanced position tracking with exit strategies
+- [ ] **Price Monitoring System**: Real-time price monitoring for position management
+- [ ] **Exit Strategy Engine**: Automated stop-loss, take-profit, and trailing stops
+- [ ] **Risk Management**: Position-based risk calculation and management
+- [ ] **Data Persistence**: Enhanced state saving and recovery system
+- [ ] **Position Commands**: New commands for position management:
+    - `openposition <token> <amount> <type> <stopLoss> <takeProfit> [maxHoldTime]`
+    - `positions` - Show all open positions
+    - `closeposition <positionId>` - Close specific position
+    - `startmonitoring` - Start price monitoring
+    - `stopmonitoring` - Stop price monitoring
+    - `updatestop <positionId> <newStopLoss>` - Update stop loss
+    - `updatetarget <positionId> <newTakeProfit>` - Update take profit
+
 ### 📋 Phase 3: Futures Trading System (PLANNED)
 
 - [ ] Futures contract integration
@@ -130,9 +146,10 @@ A comprehensive trading bot for decentralized exchanges (DEX) built with ethers.
 ## Estimated Development Time
 
 - **Phase 2.4**: 3-4 hours (Advanced Analytics & Optimization)
+- **Phase 2.5**: 6-8 hours (Smart Position Management System)
 - **Phase 3**: 8-12 hours (Futures Trading System)
 - **Phase 4**: 12-16 hours (Advanced Features)
-- **Total Remaining**: 23-32 hours
+- **Total Remaining**: 29-40 hours
 
 ## Notes
 
@@ -141,6 +158,7 @@ A comprehensive trading bot for decentralized exchanges (DEX) built with ethers.
 - Dynamic slippage management based on market volatility is operational
 - System is 98% ready for production use
 - Advanced analytics and optimization features are the next focus
+- **Smart Position Management System** is planned for Phase 2.5 with comprehensive exit strategies
 - Futures trading remains a major milestone for future development
 - Documentation is comprehensive and up-to-date
 
