@@ -1,7 +1,13 @@
 // Core DEX Trading Engine with MEV Protection
 import { ethers } from 'ethers';
-import { ArbitrageOpportunity, LiquidityPool, TokenPair } from './types';
-import { logger } from './utils';
+import { 
+  ArbitrageOpportunity,
+  ExchangeConfig,
+  TokenPair,
+  MEVProtectionConfig
+} from './types/exchange';
+import { logger, logTransaction, logError } from './utils/logger';
+import { getHistoricalPrices, getCurrentPrice } from './data/market-data';
 
 interface BotConfig {
   maxSlippage: number;
@@ -83,13 +89,59 @@ export class MEVProtectedBot {
   }
 
   private async buildArbitrageTx(opportunity: ArbitrageOpportunity): Promise<ethers.providers.TransactionRequest | null> {
-    // Implementation for building arbitrage transaction
-    // Includes profit calculation and slippage protection
-    return null; // Simplified for example
+    try {
+      const { buyExchange, sellExchange, pair, minAmountIn } = opportunity;
+      const buyRouter = this.getRouterContract(buyExchange);
+      const sellRouter = this.getRouterContract(sellExchange);
+
+      const path = [pair.baseToken, pair.quoteToken];
+      const deadline = Math.floor(Date.now() / 1000) + 300; // 5 minutes
+      
+      // Get real-time prices
+      const [buyPrice, sellPrice] = await Promise.all([
+        getCurrentPrice(buyExchange, pair),
+        getCurrentPrice(sellExchange, pair)
+      ]);
+
+      // Calculate optimal amount with slippage protection
+      const amountIn = ethers.parseEther(minAmountIn);
+      const amountOutMin = this.calculateMinAmountOut(amountIn, buyPrice, sellPrice);
+
+      return {
+        to: buyRouter.address,
+        data: buyRouter.interface.encodeFunctionData('swapExactTokensForTokens', [
+          amountIn,
+          amountOutMin,
+          path,
+          this.wallet.address,
+          deadline
+        ]),
+        value: 0
+      };
+    } catch (error) {
+      logError(error as Error, { context: 'buildArbitrageTx' });
+      return null;
+    }
   }
 
   private async protectFromFrontrunning(txParams: ethers.providers.TransactionRequest): Promise<void> {
-    // Implementation of frontrunning protection mechanisms
+    if (this.config.mevProtection.flashbotsEnabled) {
+      const flashbotsBundle: TransactionBundle = {
+        txs: [txParams],
+        blockNumber: await this.provider.getBlockNumber() + 1
+      };
+      
+      await this.sendFlashbotsBundle(flashbotsBundle);
+      logger.info(`Transaction protected with Flashbots bundle`);
+      return;
+    }
+
+    // Fallback protection strategy
+    const currentGas = await this.provider.getGasPrice();
+    txParams.gasPrice = currentGas.mul(110).div(100); // Add 10% premium
+    txParams.gasLimit = this.config.gasLimit.mul(120).div(100); // Add 20% buffer
+    
+    logger.info(`Added gas premium for frontrunning protection`);
   }
 
   private async sendTransaction(txParams: ethers.providers.TransactionRequest): Promise<ethers.providers.TransactionResponse> {
