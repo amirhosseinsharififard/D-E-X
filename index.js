@@ -527,10 +527,12 @@ function createContractManager(provider, wallet) {
 }
 
 /**
- * Buy token with ETH
+ * Buy token with ETH - خرید توکن با اتریوم
  *
  * Executes a swap from ETH to token using Uniswap V2
  * Includes slippage protection and deadline management
+ * اجرای سوآپ از اتریوم به توکن با استفاده از یونی سواپ نسخه ۲
+ * شامل محافظت از لغزش و مدیریت مهلت زمانی
  *
  * @param {Object} bot - Trading bot instance
  * @param {string} tokenAddress - Address of token to buy
@@ -544,7 +546,7 @@ async function buyTokenWithETH(bot, tokenAddress, ethAmount) {
         const contractManager = createContractManager(bot.provider, bot.wallet);
         const router = contractManager.getRouterContract();
 
-        // Convert ETH to wei (18 decimals)
+        // Convert ETH to wei (18 decimals) - تبدیل اتریوم به وی (۱۸ رقم اعشار)
         const amountIn = ethers.parseEther(ethAmount.toString());
 
         // Trading path: ETH -> WETH -> Token
@@ -557,7 +559,7 @@ async function buyTokenWithETH(bot, tokenAddress, ethAmount) {
 
         console.log(`Expected to receive: ${ethers.formatUnits(amountsOut[1], 18)} tokens`);
 
-        // Set deadline (3 minutes from now)
+        // Set deadline (3 minutes from now) - تنظیم مهلت زمانی (۳ دقیقه از حالا)
         const deadline = Math.floor(Date.now() / 1000) + 180;
 
         // Execute swap transaction
@@ -642,7 +644,7 @@ async function sellTokenForETH(bot, tokenAddress, tokenAmount) {
  */
 
 // Get wallet ETH balance
-commandManager.register('balance', 'Get wallet balance', async(bot) => {
+commandManager.register('balance', 'Get wallet balance (دریافت موجودی کیف پول)', async(bot) => {
     const balance = await getBalance(bot);
     console.log(`Current balance: ${balance} ETH`);
 });
