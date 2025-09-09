@@ -195,3 +195,120 @@ For support and questions, please open an issue in the repository.
 ---
 
 **Note**: This bot is for educational and development purposes. Use at your own risk in production environments.
+# DEX Trading Bot - ربات معاملاتی غیرمتمرکز
+
+A sophisticated decentralized exchange trading bot with MEV protection and advanced trading strategies  
+ربات معاملاتی پیشرفته برای صرافی‌های غیرمتمرکز با قابلیت‌های ضد MEV و استراتژی‌های معاملاتی پیچیده
+
+![DEX Bot Architecture](https://via.placeholder.com/800x400.png?text=DEX+Bot+Architecture)
+
+## 🌐 English Section
+
+### Key Features
+- **MEV Protection**: Sandwich attack detection, frontrunning prevention, flashbots integration
+- **Multi-DEX Support**: Uniswap, Sushiswap, Pancakeswap with automated arbitrage
+- **Advanced Trading**:
+  - Limit orders with custom slippage (1-10%)
+  - Stop-loss/take-profit management
+  - Grid trading strategies
+  - Dollar-cost averaging (DCA)
+- **Risk Management**:
+  - Position sizing using Kelly Criterion
+  - Dynamic gas price optimization
+  - Circuit breaker pattern
+- **Multi-chain Ready**: Ethereum, BSC, Polygon support
+- **Analytics**:
+  - Real-time P&L tracking
+  - Historical trade analysis
+  - Liquidity pool monitoring
+
+### Quick Start
+```bash
+# Install dependencies
+npm install
+
+# Configure environment
+cp .env.example .env
+
+# Start bot
+npm start
+```
+
+### Configuration
+```javascript
+// Sample config
+{
+  "maxSlippage": 0.5, // %
+  "gasLimit": "500000",
+  "maxGasPrice": "100", // gwei
+  "profitThreshold": 0.01, // ETH
+  "dex": {
+    "uniswap": "0x7a250d...",
+    "sushiswap": "0xd9e1cE..."
+  }
+}
+```
+
+### Future Roadmap
+- [ ] AI-powered price prediction
+- [ ] Cross-chain arbitrage
+- [ ] Options trading strategies
+- [ ] NFT liquidity management
+- [ ] Social trading features
+
+## 🇮🇷 بخش فارسی
+
+### ویژگی‌های کلیدی
+- **حفاظت در برابر MEV**: تشخیص حملات ساندویچی، جلوگیری از فرانت رانینگ، یکپارچه‌سازی فلش بات‌ها
+- **پشتیبانی از چندین صرافی**: یونی سواپ، سوشی سواپ، پنکیک سواپ با امکان آربیتراژ خودکار
+- **معاملات پیشرفته**:
+  - سفارشات محدود با لغزش قابل تنظیم (1-10%)
+  - مدیریت حد ضرر و حد سود
+  - استراتژی‌های معاملاتی شبکه‌ای
+  - میانگین‌گیری هزینه دلاری (DCA)
+- **مدیریت ریسک**:
+  - تعیین حجم معامله با معیار کلی
+  - بهینه‌سازی پویای قیمت گاز
+  - الگوی قطع اضطراری
+- **پشتیبانی چند زنجیره‌ای**: اتریوم، BSC، پالیگان
+- **تحلیل‌گر**:
+  - رصد سود و زیان لحظه‌ای
+  - تحلیل تاریخچه معاملات
+  - مانیتورینگ استخرهای نقدینگی
+
+### شروع سریع
+```bash
+# نصب وابستگی‌ها
+npm install
+
+# تنظیم محیط
+cp .env.example .env
+
+# اجرای ربات
+npm start
+```
+
+### تنظیمات
+```javascript
+// نمونه تنظیمات
+{
+  "maxSlippage": 0.5, // درصد
+  "gasLimit": "500000",
+  "maxGasPrice": "100", // گیگا وی
+  "profitThreshold": 0.01, // اتر
+  "dex": {
+    "uniswap": "0x7a250d...",
+    "sushiswap": "0xd9e1cE..."
+  }
+}
+```
+
+### نقشه راه آینده
+- [ ] پیش‌بینی قیمت با هوش مصنوعی
+- [ ] آربیتراژ بین زنجیره‌ای
+- [ ] استراتژی‌های معاملات اختیاری
+- [ ] مدیریت نقدینگی NFT
+- [ ] ویژگی‌های معاملات اجتماعی
+
+## 📝 License
+MIT License - برای استفاده تجاری و شخصی
