@@ -112,7 +112,27 @@ A comprehensive trading bot for decentralized exchanges (DEX) built with ethers.
     - `getMargin <positionId>`
     - `addMargin <positionId> <amount>`
 
-### 📋 Phase 4: Advanced Features (PLANNED)
+### 📋 Phase 4: Telegram Bot Integration (PLANNED)
+
+- [ ] Telegram Bot API integration
+- [ ] Command-based trading through Telegram
+- [ ] Real-time notifications and alerts
+- [ ] Portfolio monitoring via Telegram
+- [ ] Price alerts and market updates
+- [ ] Secure authentication system
+- [ ] Multi-user support
+- [ ] Telegram-specific commands:
+    - `/start` - Initialize bot and show welcome message
+    - `/balance` - Get wallet balance
+    - `/portfolio` - Show complete portfolio
+    - `/buy <token> <amount>` - Buy token via Telegram
+    - `/sell <token> <amount>` - Sell token via Telegram
+    - `/positions` - Show open positions
+    - `/alerts` - Manage price alerts
+    - `/help` - Show available commands
+    - `/settings` - Configure bot settings
+
+### 📋 Phase 5: Advanced Features (PLANNED)
 
 - [ ] Web interface
 - [ ] Real-time price monitoring
@@ -148,8 +168,9 @@ A comprehensive trading bot for decentralized exchanges (DEX) built with ethers.
 - **Phase 2.4**: 3-4 hours (Advanced Analytics & Optimization)
 - **Phase 2.5**: 6-8 hours (Smart Position Management System)
 - **Phase 3**: 8-12 hours (Futures Trading System)
-- **Phase 4**: 12-16 hours (Advanced Features)
-- **Total Remaining**: 29-40 hours
+- **Phase 4**: 6-8 hours (Telegram Bot Integration)
+- **Phase 5**: 12-16 hours (Advanced Features)
+- **Total Remaining**: 35-48 hours
 
 ## Notes
 
@@ -159,6 +180,7 @@ A comprehensive trading bot for decentralized exchanges (DEX) built with ethers.
 - System is 98% ready for production use
 - Advanced analytics and optimization features are the next focus
 - **Smart Position Management System** is planned for Phase 2.5 with comprehensive exit strategies
+- **Telegram Bot Integration** is planned for Phase 4 to enable mobile trading
 - Futures trading remains a major milestone for future development
 - Documentation is comprehensive and up-to-date
 
