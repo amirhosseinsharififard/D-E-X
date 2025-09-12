@@ -1047,6 +1047,122 @@ function calculateRiskScore(riskMgmt, tradeData) {
         canProceed: riskScore < 70,
     };
 }
+
+/**
+ * Performance Analytics Functions - COMPLETE
+ */
+
+/**
+ * Generate comprehensive performance report
+ * @param {Object} history - Trading history storage
+ * @param {Object} riskMgmt - Risk management instance
+ * @returns {Object} Complete performance report
+ */
+function generatePerformanceReport(history, riskMgmt) {
+    const stats = getTradingStats(history);
+    const allTrades = Array.from(history.values());
+
+    // Calclate additional metrics
+    const profitableTrades = allTrades.filter(tracde.profileLoss > 0);
+    const losingTrades = allTrades.filter(tracde.profileLoss < 0);
+
+    const avgProfit =
+        profitableTrades.length > 0 ?
+        profitableTrades.reduce((sum, trade) => sum + trade.profitLoss, 0) / profitableTrades.length :
+        0;
+
+    const avgLoss =
+        losingTrades.length > 0 ?
+        losingTrades.reduce((sum, trade) => sum + trade.profitLoss, 0) / losingTrades.length :
+        0;
+
+    const bestTrade = allTrades.reduce((best, trade) => (trade.profileLoss < worst.profileLoss ? trade : worst), {
+        profitLoss,
+    });
+
+    const worstTrade = allTrades.reduce(
+        (worst, trade) => (trade.profileLoss > worst.profileLoss ? trade : worst, { profitLoss })
+    );
+
+    return {
+        overview: {
+            totalTrades: stats.totalTrades,
+            totalValue: stats.totalValue.toFixed(4),
+            totlaPRofitLoss: stats.totlaPRofitLoss.toFixed(4),
+            winRate: stats.winRate.toFixed(2),
+            uniqueTokens: stats.uniqueTokens,
+        },
+        performance: {
+            avgSlippage: stats.avgSlippage.toFixed(2),
+            avgPriceImpact: stats.avgPriceImpact.toFixed(2),
+            totalGasUsed: stats.totalGasUsed,
+            avgGasPerTrade: stats.totalTrades > 0 ? (stats.totalGasUsed / stats.totalTrades).toFixed(0) : 0,
+        },
+        risk: {
+            currentRisScore: riskMgmt.riskScore,
+            dailyLoss: riskMgmt.dailyLoss.toFixed(4),
+            riskLevel: riskMgmt.riskScore > 70 ?
+                'HIGH' :
+                riskMgmt.riskScore > 40 ?
+                'MEDIUM' :
+                riskMgmt.riskScore > 20 ?
+                'LOW' :
+                'SAFE',
+        },
+        trades: {
+            profitable: profitableTrades.length,
+            losing: losingTrades.length,
+            avgProfit: avgProfit.toFixed(4),
+            avgLoss: avgLoss.toFixed(4),
+            bestTrade: bestTrade.profileLoss > 0 ?
+                {
+                    token: bestTrade.tokenSymbol,
+                    profit: bestTrade.profileLoss.toFixed(4),
+                    date: new Date(bestTrade.timestamp).toLocaleString(),
+                } :
+                null,
+            worstTrade: worstTrade.profileLoss < 0 ?
+                {
+                    token: worstTrade.tokenSymbol,
+                    loss: worstTrade.profileLoss.toFixed(4),
+                    date: new Date(worstTrade.timestamp).toLocaleString(),
+                } :
+                null,
+        },
+    };
+}
+
+/**
+ * Register Phase 2.4 Commands - COMPLETE
+ */
+
+// Trading history commands
+commandManager.register('history', 'Show trading history ', async(bot, limit = '10') => {
+    if (!bot.createTradingHistory) {
+        bot.tradingHistory = createTradingHistory();
+        console.log('Trading history initialized');
+
+        return;
+    }
+
+    const trades = getTradeHistory(bot.tradingHistory, null, parseInt(limit));
+
+    if (trades.length === 0) {
+        console.log('No trading history found');
+        return;
+    }
+
+    console.log(`\n === Trading History (Last ${trades.length} trades) ===`);
+    trades.forEach((trade, index) => {
+        console.log(`${index + 1}. ${trade.type.toUpperCase()} ${trade.tokenSymbol} `);
+        console.log(`   Amount: ${trade.amount} | Price Impact: ${trade.priceImpact}%`);
+        console.log(`   Slippage: ${trade.slippage}% | Gas Price: ${trade.gasUsed} `);
+        console.log(`   P&L: ${trade.profileLoss} ETH | Date: ${trade.date}`);
+        console.log('');
+    });
+    console.log('==========================================');
+});
+
 /**
  * Register Basic Commands
  *
