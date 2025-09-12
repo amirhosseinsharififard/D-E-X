@@ -19,6 +19,9 @@
 
 // Import ethers.js library (version 6)
 import { ethers } from 'ethers';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Configuration for the trading bot
 // TODO: Move to .env file for production
@@ -473,12 +476,52 @@ const CONTRACTS = {
      * Mainnet addresses (will be different on testnets)
      */
     ADDRESSES: {
+        ROUTER: '0x...', // MockUniswapRouter address (will be filled after deployment)
+        WETH: '0x0000000000000000000000000000000000000001', // Mock WETH address
+        USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USD Coin (not used in local)
+        TEST_TOKEN: '0x...', // Test token address (will be filled after deployment)
+    },
+    ADDRESSES_LOCAL: {
         ROUTER: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D', // Uniswap V2 Router
         WETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', // Wrapped ETH
         USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // USD Coin
         TEST_TOKEN: '0x5FbDB2315678afecb367f032d93F642f64180aa3', // Test token for local testing
     },
 };
+
+/**
+ * Load deployment addresses from deployments/local.json if present
+ * Returns the resolved addresses object used by the app.
+ */
+async function loadDeploymentAddressesIfAvailable() {
+    try {
+        const __filename = fileURLToPath(
+            import.meta.url);
+        const __dirname = path.dirname(__filename);
+        const deploymentsDir = path.join(__dirname, 'deployments');
+        const filePath = path.join(deploymentsDir, 'local.json');
+
+        const content = await fs.readFile(filePath, 'utf8');
+        const addresses = JSON.parse(content);
+
+        if (addresses && typeof addresses === 'object') {
+            if (addresses.ROUTER) CONTRACTS.ADDRESSES.ROUTER = addresses.ROUTER;
+            if (addresses.WETH) CONTRACTS.ADDRESSES.WETH = addresses.WETH;
+            if (addresses.TEST_TOKEN) CONTRACTS.ADDRESSES.TEST_TOKEN = addresses.TEST_TOKEN;
+            console.log('\nLoaded deployment addresses from deployments/local.json');
+            console.log('ROUTER:', CONTRACTS.ADDRESSES.ROUTER);
+            console.log('WETH:', CONTRACTS.ADDRESSES.WETH);
+            console.log('TEST_TOKEN:', CONTRACTS.ADDRESSES.TEST_TOKEN);
+        }
+    } catch (err) {
+        // Optional file; skip if not present
+        if (err && err.code !== 'ENOENT') {
+            console.warn('Warning reading deployments/local.json:', err.message);
+        }
+    }
+
+    return CONTRACTS.ADDRESSES;
+}
 
 /**
  * Contract Manager
@@ -1060,65 +1103,86 @@ function calculateRiskScore(riskMgmt, tradeData) {
  */
 function generatePerformanceReport(history, riskMgmt) {
     const stats = getTradingStats(history);
-    const allTrades = Array.from(history.trades.values());
+    const allTrades = Array.from(history.trade.values());
 
-    // Calclate additional metrics
-    const profitableTrades = allTrades.filter(trade => trade.profitLoss > 0)
-    const losingTrades = allTrades.filter(trade => trade.profitLoss < 0);
+    // Additional metrics
+    const profitableTrades = allTrades.filter((trade) => (trade.profitLoss || 0) > 0);
+    const losingTrades = allTrades.filter((trade) => (trade.profitLoss || 0) < 0);
+
+    const totalProfitLoss = allTrades.reduce((sum, t) => sum + (t.profitLoss || 0), 0);
+    const winRate = stats.totalTrades > 0 ? (profitableTrades.length / stats.totalTrades) * 100 : 0;
+    const uniqueTokens = new Set(allTrades.map((t) => t.tokenAddress)).size;
+    const avgPriceImpact =
+        stats.totalTrades > 0 ?
+        allTrades.reduce((sum, t) => sum + (typeof t.priceImpact === 'number' ? t.priceImpact : 0), 0) /
+        stats.totalTrades :
+        0;
 
     const avgProfit =
         profitableTrades.length > 0 ?
-        profitableTrades.reduce((sum, trade) => sum + trade.profitLoss, 0) / profitableTrades.length :
+        profitableTrades.reduce((sum, trade) => sum + (trade.profitLoss || 0), 0) / profitableTrades.length :
         0;
 
     const avgLoss =
         losingTrades.length > 0 ?
-        losingTrades.reduce((sum, trade) => sum + trade.profitLoss, 0) / losingTrades.length :
+        losingTrades.reduce((sum, trade) => sum + (trade.profitLoss || 0), 0) / losingTrades.length :
         0;
 
-    const bestTrade = allTrades.reduce((best, trade) =>
-        trade.profitLoss > best.profitLoss ? trade : best, { profitLoss: 0 });
+    const bestTrade = allTrades.reduce(
+        (best, trade) => ((trade.profitLoss || 0) > (best.profitLoss || 0) ? trade : best), { profitLoss: 0 }
+    );
 
-    const worstTrade = allTrades.reduce((worst, trade) =>
-        trade.profitLoss < worst.profitLoss ? trade : worst, { profitLoss: 0 })
+    const worstTrade = allTrades.reduce(
+        (worst, trade) => ((trade.profitLoss || 0) < (worst.profitLoss || 0) ? trade : worst), { profitLoss: 0 }
+    );
 
     return {
         overview: {
             totalTrades: stats.totalTrades,
-            totalValue: stats.totalVolume.toFixed(4),
-            totlaPRofitLoss: stats.totlaPRofitLoss.toFixed(4),
-            winRate: stats.winRate.toFixed(2),
-            uniqueTokens: stats.uniqueTokens,
+            totalVolume: stats.totalVolume.toFixed(4),
+            totalProfitLoss: totalProfitLoss.toFixed(4),
+            winRate: winRate.toFixed(2),
+            uniqueTokens: uniqueTokens,
+            tradesToday: stats.tradesToday,
         },
         performance: {
             avgSlippage: stats.avgSlippage.toFixed(2),
-            avgPriceImpact: stats.avgPriceImpact.toFixed(2),
+            avgPriceImpact: avgPriceImpact.toFixed(2),
             totalGasUsed: stats.totalGasUsed,
             avgGasPerTrade: stats.totalTrades > 0 ? (stats.totalGasUsed / stats.totalTrades).toFixed(0) : 0,
         },
         risk: {
-            currentRisScore: riskMgmt.riskScore,
+            currentRiskScore: riskMgmt.riskScore,
             dailyLoss: riskMgmt.dailyLoss.toFixed(4),
             riskLevel: riskMgmt.riskScore > 70 ?
-                'HIGH' : riskMgmt.riskScore > 40 ?
-                'MEDIUM' : riskMgmt.riskScore > 20 ?
-                'LOW' : 'SAFE',
+                'HIGH' :
+                riskMgmt.riskScore > 40 ?
+                'MEDIUM' :
+                riskMgmt.riskScore > 20 ?
+                'LOW' :
+                'SAFE',
         },
         trades: {
             profitable: profitableTrades.length,
             losing: losingTrades.length,
             avgProfit: avgProfit.toFixed(4),
             avgLoss: avgLoss.toFixed(4),
-            bestTrade: bestTrade.profitLoss > 0 ? {
-                token: bestTrade.tokenSymbol,
-                profit: bestTrade.profitLoss.toFixed(4),
-                date: new Date(bestTrade.timestamp).toLocaleString(),
-            } : null,
-            worstTrade: worstTrade.profitLoss < 0 ? {
-                token: worstTrade.tokenSymbol,
-                loss: worstTrade.profitLoss.toFixed(4),
-                date: new Date(worstTrade.timestamp).toLocaleString(),
-            } : null,
+            bestTrade:
+                (bestTrade.profitLoss || 0) > 0 ?
+                {
+                    token: bestTrade.tokenSymbol || 'UNKNOWN',
+                    profit: bestTrade.profitLoss.toFixed(4),
+                    date: new Date(bestTrade.timestamp).toLocaleString(),
+                } :
+                null,
+            worstTrade:
+                (worstTrade.profitLoss || 0) < 0 ?
+                {
+                    token: worstTrade.tokenSymbol || 'UNKNOWN',
+                    loss: worstTrade.profitLoss.toFixed(4),
+                    date: new Date(worstTrade.timestamp).toLocaleString(),
+                } :
+                null,
         },
     };
 }
@@ -1153,7 +1217,6 @@ commandManager.register('history', 'Show trading history ', async(bot, limit = '
     });
     console.log('==========================================');
 });
-
 
 // Trading statistics command
 commandManager.register('stats', 'Show comprehensive trading statistics', async(bot) => {
@@ -1206,7 +1269,6 @@ commandManager.register('stats', 'Show comprehensive trading statistics', async(
     console.log('\n==========================================');
 });
 
-
 // Gas optimization commands
 commandManager.register('gas', 'Show current gas prices and recommendations', async(bot) => {
     const gasData = await getCurrentGasPrice(bot.provider);
@@ -1217,179 +1279,198 @@ commandManager.register('gas', 'Show current gas prices and recommendations', as
     console.log(`Max Priority Fee: ${gasData.formatted.maxPriorityFeePerGas} gwei`);
 
     console.log('\n💡 RECOMMENDATIONS:');
-    console.log(`   Low Priority: ${gasData.recommendations.low.maxFeePerGas} gwei (${gasData.recommendations.low.maxPriorityFeePerGas} priority)`);
-    console.log(`   Medium Priority: ${gasData.recommendations.medium.maxFeePerGas} gwei (${gasData.recommendations.medium.maxPriorityFeePerGas} priority)`);
-    console.log(`   High Priority: ${gasData.recommendations.high.maxFeePerGas} gwei (${gasData.recommendations.high.maxPriorityFeePerGas} priority)`);
+    console.log(
+        `   Low Priority: ${gasData.recommendations.low.maxFeePerGas} gwei (${gasData.recommendations.low.maxPriorityFeePerGas} priority)`
+    );
+    console.log(
+        `   Medium Priority: ${gasData.recommendations.medium.maxFeePerGas} gwei (${gasData.recommendations.medium.maxPriorityFeePerGas} priority)`
+    );
+    console.log(
+        `   High Priority: ${gasData.recommendations.high.maxFeePerGas} gwei (${gasData.recommendations.high.maxPriorityFeePerGas} priority)`
+    );
 
     console.log('\n==========================================');
 });
 
 // Price impact analysis command
-commandManager.register('priceimpact', 'Analyze price impact for a trade', async(bot, tokenAddress, amount, direction = 'buy') => {
-    if (!tokenAddress || !amount) {
-        console.error('Usage: priceimpact <tokenAddress> <amount> [direction]');
-        console.error('Direction: buy or sell (default: buy)');
-        return;
-    }
-
-    try {
-        const contractManager = createContractManager(bot.provider, bot.wallet);
-        const amountWei = direction === 'buy' ?
-            ethers.parseEther(amount) :
-            ethers.parseUnits(amount, 18);
-
-        const impact = await calculatePriceImpact(contractManager, tokenAddress, amountWei, direction);
-
-        console.log(`\n=== �� PRICE IMPACT ANALYSIS ===`);
-        console.log(`Direction: ${direction.toUpperCase()}`);
-        console.log(`Amount: ${amount} ${direction === 'buy' ? 'ETH' : 'tokens'}`);
-        console.log(`Expected Output: ${impact.expectedOutput} ${direction === 'buy' ? 'tokens' : 'ETH'}`);
-        console.log(`Price Impact: ${impact.priceImpact.toFixed(2)}%`);
-        console.log(`Impact Level: ${impact.impactLevel}`);
-        console.log(`Recommendation: ${impact.recommendation}`);
-        console.log('==========================================');
-    } catch (error) {
-        console.error('Error analyzing price impact:', error.message);
-    }
-});
-
-// Risk assessment command
-commandManager.register('risk', 'Assess risk for a potential trade', async(bot, tokenAddress, amount, slippage = '5') => {
-    if (!tokenAddress || !amount) {
-        console.error('Usage: risk <tokenAddress> <amount> [slippage]');
-        return;
-    }
-
-    if (!bot.riskManagement) {
-        bot.riskManagement = createRiskManagement();
-    }
-
-    try {
-        const contractManager = createContractManager(bot.provider, bot.wallet);
-        const amountWei = ethers.parseEther(amount);
-
-        // Get price impact
-        const impact = await calculatePriceImpact(contractManager, tokenAddress, amountWei, 'buy');
-
-        // Get current gas price
-        const gasData = await getCurrentGasPrice(bot.provider);
-
-        const tradeData = {
-            amount: parseFloat(amount),
-            slippage: parseFloat(slippage),
-            priceImpact: impact.priceImpact,
-            gasPrice: parseFloat(gasData.formatted.gasPrice),
-        };
-
-        const riskAssessment = calculateRiskScore(bot.riskManagement, tradeData);
-
-        console.log(`\n=== ⚠️ RISK ASSESSMENT ===`);
-        console.log(`Trade Amount: ${amount} ETH`);
-        console.log(`Slippage: ${slippage}%`);
-        console.log(`Price Impact: ${impact.priceImpact.toFixed(2)}%`);
-        console.log(`Gas Price: ${gasData.formatted.gasPrice} gwei`);
-
-        console.log(`\nRisk Score: ${riskAssessment.riskScore}/100`);
-        console.log(`Risk Level: ${riskAssessment.riskLevel}`);
-        console.log(`Can Proceed: ${riskAssessment.canProceed ? '✅ YES' : '❌ NO'}`);
-
-        if (riskAssessment.warnings.length > 0) {
-            console.log('\n⚠️ WARNINGS:');
-            riskAssessment.warnings.forEach(warning => console.log(`   - ${warning}`));
-        }
-
-        console.log('\n💡 RECOMMENDATIONS:');
-        riskAssessment.recommendations.forEach(rec => console.log(`   - ${rec}`));
-
-        console.log('==========================================');
-    } catch (error) {
-        console.error('Error assessing risk:', error.message);
-    }
-});
-
-
-
-// Enhanced buy command with analytics
-commandManager.register('buyanalytics', 'Buy token with full analytics tracking', async(bot, tokenAddress, ethAmount, slippage = null) => {
-    if (!tokenAddress || !ethAmount) {
-        console.error('Usage: buyanalytics <tokenAddress> <ethAmount> [slippage]');
-        return;
-    }
-
-    // Initialize systems if needed
-    if (!bot.tradingHistory) bot.tradingHistory = createTradingHistory();
-    if (!bot.riskManagement) bot.riskManagement = createRiskManagement();
-    if (!bot.gasOptimization) bot.gasOptimization = createGasOptimization();
-
-    try {
-        console.log(`\n=== 🚀 ANALYTICS-ENHANCED BUY ORDER ===`);
-
-        // Pre-trade analysis
-        const contractManager = createContractManager(bot.provider, bot.wallet);
-        const amountWei = ethers.parseEther(ethAmount);
-
-        // Get price impact
-        const impact = await calculatePriceImpact(contractManager, tokenAddress, amountWei, 'buy');
-
-        // Get gas data
-        const gasData = await getCurrentGasPrice(bot.provider);
-
-        // Risk assessment
-        const tradeData = {
-            amount: parseFloat(ethAmount),
-            slippage: parseFloat(slippage) || 5,
-            priceImpact: impact.priceImpact,
-            gasPrice: parseFloat(gasData.formatted.gasPrice),
-        };
-
-        const riskAssessment = calculateRiskScore(bot.riskManagement, tradeData);
-
-        console.log(`\n�� PRE-TRADE ANALYSIS:`);
-        console.log(`   Price Impact: ${impact.priceImpact.toFixed(2)}% (${impact.impactLevel})`);
-        console.log(`   Risk Score: ${riskAssessment.riskScore}/100 (${riskAssessment.riskLevel})`);
-        console.log(`   Gas Price: ${gasData.formatted.gasPrice} gwei`);
-
-        if (!riskAssessment.canProceed) {
-            console.log('❌ Trade blocked due to high risk!');
+commandManager.register(
+    'priceimpact',
+    'Analyze price impact for a trade',
+    async(bot, tokenAddress, amount, direction = 'buy') => {
+        if (!tokenAddress || !amount) {
+            console.error('Usage: priceimpact <tokenAddress> <amount> [direction]');
+            console.error('Direction: buy or sell (default: buy)');
             return;
         }
 
-        // Execute trade
-        console.log(`\n🔄 Executing trade...`);
-        const result = await buyTokenWithETHAdvanced(bot, tokenAddress, parseFloat(ethAmount), parseFloat(slippage));
+        try {
+            const contractManager = createContractManager(bot.provider, bot.wallet);
+            const amountWei = direction === 'buy' ? ethers.parseEther(amount) : ethers.parseUnits(amount, 18);
 
-        if (result) {
-            // Record trade in history
-            const tokenInfo = getTokenInfo(bot, tokenAddress);
-            const tradeRecord = {
-                type: 'buy',
-                tokenAddress: tokenAddress,
-                tokenSymbol: tokenInfo ? tokenInfo.symbol : 'UNKNOWN',
-                amount: ethAmount,
-                price: 0,
-                slippage: tradeData.slippage,
-                gasUsed: result.gasUsed || 0,
-                gasPrice: tradeData.gasPrice,
-                txHash: result.transactionHash || 'unknown',
-                priceImpact: impact.priceImpact,
-                profitLoss: 0,
-            };
+            const impact = await calculatePriceImpact(contractManager, tokenAddress, amountWei, direction);
 
-            const tradeId = recordTrade(bot.tradingHistory, tradeRecord);
+            console.log(`\n=== �� PRICE IMPACT ANALYSIS ===`);
+            console.log(`Direction: ${direction.toUpperCase()}`);
+            console.log(`Amount: ${amount} ${direction === 'buy' ? 'ETH' : 'tokens'}`);
+            console.log(`Expected Output: ${impact.expectedOutput} ${direction === 'buy' ? 'tokens' : 'ETH'}`);
+            console.log(`Price Impact: ${impact.priceImpact.toFixed(2)}%`);
+            console.log(`Impact Level: ${impact.impactLevel}`);
+            console.log(`Recommendation: ${impact.recommendation}`);
+            console.log('==========================================');
+        } catch (error) {
+            console.error('Error analyzing price impact:', error.message);
+        }
+    }
+);
 
-            console.log(`✅ Trade successful!`);
-            console.log(`   Trade ID: ${tradeId}`);
-            console.log(`   TX Hash: ${result.transactionHash || 'unknown'}`);
-            console.log(`   Gas Used: ${result.gasUsed || 'unknown'}`);
-        } else {
-            console.log('❌ Trade failed');
+// Risk assessment command
+commandManager.register(
+    'risk',
+    'Assess risk for a potential trade',
+    async(bot, tokenAddress, amount, slippage = '5') => {
+        if (!tokenAddress || !amount) {
+            console.error('Usage: risk <tokenAddress> <amount> [slippage]');
+            return;
         }
 
-        console.log('==========================================');
-    } catch (error) {
-        console.error('Error in analytics-enhanced buy:', error.message);
+        if (!bot.riskManagement) {
+            bot.riskManagement = createRiskManagement();
+        }
+
+        try {
+            const contractManager = createContractManager(bot.provider, bot.wallet);
+            const amountWei = ethers.parseEther(amount);
+
+            // Get price impact
+            const impact = await calculatePriceImpact(contractManager, tokenAddress, amountWei, 'buy');
+
+            // Get current gas price
+            const gasData = await getCurrentGasPrice(bot.provider);
+
+            const tradeData = {
+                amount: parseFloat(amount),
+                slippage: parseFloat(slippage),
+                priceImpact: impact.priceImpact,
+                gasPrice: parseFloat(gasData.formatted.gasPrice),
+            };
+
+            const riskAssessment = calculateRiskScore(bot.riskManagement, tradeData);
+
+            console.log(`\n=== ⚠️ RISK ASSESSMENT ===`);
+            console.log(`Trade Amount: ${amount} ETH`);
+            console.log(`Slippage: ${slippage}%`);
+            console.log(`Price Impact: ${impact.priceImpact.toFixed(2)}%`);
+            console.log(`Gas Price: ${gasData.formatted.gasPrice} gwei`);
+
+            console.log(`\nRisk Score: ${riskAssessment.riskScore}/100`);
+            console.log(`Risk Level: ${riskAssessment.riskLevel}`);
+            console.log(`Can Proceed: ${riskAssessment.canProceed ? '✅ YES' : '❌ NO'}`);
+
+            if (riskAssessment.warnings.length > 0) {
+                console.log('\n⚠️ WARNINGS:');
+                riskAssessment.warnings.forEach((warning) => console.log(`   - ${warning}`));
+            }
+
+            console.log('\n💡 RECOMMENDATIONS:');
+            riskAssessment.recommendations.forEach((rec) => console.log(`   - ${rec}`));
+
+            console.log('==========================================');
+        } catch (error) {
+            console.error('Error assessing risk:', error.message);
+        }
     }
-});
+);
+
+// Enhanced buy command with analytics
+commandManager.register(
+    'buyanalytics',
+    'Buy token with full analytics tracking',
+    async(bot, tokenAddress, ethAmount, slippage = null) => {
+        if (!tokenAddress || !ethAmount) {
+            console.error('Usage: buyanalytics <tokenAddress> <ethAmount> [slippage]');
+            return;
+        }
+
+        // Initialize systems if needed
+        if (!bot.tradingHistory) bot.tradingHistory = createTradingHistory();
+        if (!bot.riskManagement) bot.riskManagement = createRiskManagement();
+        if (!bot.gasOptimization) bot.gasOptimization = createGasOptimization();
+
+        try {
+            console.log(`\n=== 🚀 ANALYTICS-ENHANCED BUY ORDER ===`);
+
+            // Pre-trade analysis
+            const contractManager = createContractManager(bot.provider, bot.wallet);
+            const amountWei = ethers.parseEther(ethAmount);
+
+            // Get price impact
+            const impact = await calculatePriceImpact(contractManager, tokenAddress, amountWei, 'buy');
+
+            // Get gas data
+            const gasData = await getCurrentGasPrice(bot.provider);
+
+            // Risk assessment
+            const tradeData = {
+                amount: parseFloat(ethAmount),
+                slippage: parseFloat(slippage) || 5,
+                priceImpact: impact.priceImpact,
+                gasPrice: parseFloat(gasData.formatted.gasPrice),
+            };
+
+            const riskAssessment = calculateRiskScore(bot.riskManagement, tradeData);
+
+            console.log(`\n�� PRE-TRADE ANALYSIS:`);
+            console.log(`   Price Impact: ${impact.priceImpact.toFixed(2)}% (${impact.impactLevel})`);
+            console.log(`   Risk Score: ${riskAssessment.riskScore}/100 (${riskAssessment.riskLevel})`);
+            console.log(`   Gas Price: ${gasData.formatted.gasPrice} gwei`);
+
+            if (!riskAssessment.canProceed) {
+                console.log('❌ Trade blocked due to high risk!');
+                return;
+            }
+
+            // Execute trade
+            console.log(`\n🔄 Executing trade...`);
+            const result = await buyTokenWithETHAdvanced(
+                bot,
+                tokenAddress,
+                parseFloat(ethAmount),
+                parseFloat(slippage)
+            );
+
+            if (result) {
+                // Record trade in history
+                const tokenInfo = getTokenInfo(bot, tokenAddress);
+                const tradeRecord = {
+                    type: 'buy',
+                    tokenAddress: tokenAddress,
+                    tokenSymbol: tokenInfo ? tokenInfo.symbol : 'UNKNOWN',
+                    amount: ethAmount,
+                    price: 0,
+                    slippage: tradeData.slippage,
+                    gasUsed: result.gasUsed || 0,
+                    gasPrice: tradeData.gasPrice,
+                    txHash: result.transactionHash || 'unknown',
+                    priceImpact: impact.priceImpact,
+                    profitLoss: 0,
+                };
+
+                const tradeId = recordTrade(bot.tradingHistory, tradeRecord);
+
+                console.log(`✅ Trade successful!`);
+                console.log(`   Trade ID: ${tradeId}`);
+                console.log(`   TX Hash: ${result.transactionHash || 'unknown'}`);
+                console.log(`   Gas Used: ${result.gasUsed || 'unknown'}`);
+            } else {
+                console.log('❌ Trade failed');
+            }
+
+            console.log('==========================================');
+        } catch (error) {
+            console.error('Error in analytics-enhanced buy:', error.message);
+        }
+    }
+);
 
 /**
  * Register Basic Commands
@@ -1672,7 +1753,6 @@ async function testAdvancedFeatures() {
     console.log('=== Advanced Features Testing Completed ===');
 }
 
-
 /**
  * Test Phase 2.4 Features
  */
@@ -1717,10 +1797,11 @@ async function testPhase24Features() {
  * @returns {Promise<void>}
  */
 async function main() {
+    await loadDeploymentAddressesIfAvailable();
     await testConnection();
     await testBot();
     await testAdvancedFeatures();
-    await testPhase24Features(); // Add Phase 2.4 testing
+    await testPhase24Features();
 }
 
 // Start the application
