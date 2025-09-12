@@ -12,7 +12,7 @@
  * - Gas optimization
  * - Error handling
  *
- * @author Your Name
+ * @author Amir Hossein Sharifi Fard
  * @version 1.0.0
  * @since 2024
  */
@@ -638,6 +638,416 @@ async function sellTokenForETH(bot, tokenAddress, tokenAmount) {
 }
 
 /**
+ * Phase 2.4: Advanced Analytics & Optimization Systems
+ *
+ * This section includes advanced analytics, gas optimization,
+ * price impact analysis, trading history tracking, and risk management
+ */
+
+/**
+ * Trading History Management Functions
+ */
+
+/**
+ * Initialize trading history storage
+ * @returns {Object} Trading history storage
+ */
+
+function createTradingHistory() {
+    return {
+        trade: new Map(),
+        performance: new Map(),
+        tradeIdCounter: 1,
+    };
+}
+
+/**
+ * Record a new trade in history
+ * @param {Object} history - Trading history storage
+ * @param {Object} tradeData - Trade information
+ * @returns {string} Trade ID
+ */
+function recordTrade(history, tradeData) {
+    const tradeId = `trade_${history.tradeIdCounter++}`;
+    const trade = {
+        id: tradeId,
+        timestamp: Date.now(),
+        type: tradeData.type,
+        tokenAddress: trade.tokenAddress,
+        amount: tradeData.amount,
+        price: tradeData.price,
+        slippage: tradeData.slippage,
+        gasUsed: tradeData.gasUsed,
+        txHash: tradeData.txHash,
+        status: 'completed',
+    };
+
+    history.trade.set(tradeId, trade);
+    updatePerforkanceMetrics(history, trade);
+    return tradeId;
+}
+
+/**
+ * Update performance metrics for a token
+ * @param {Object} history - Trading history storage
+ * @param {Object} trade - Trade data
+ */
+function updatePerformanceMetrics(history, trade) {
+    const tokenAddress = trade.tokenAddress;
+    if (!history.performance.has(tokenAddress)) {
+        history.performance.set(tokenAddress, {
+            totalTrades: 0,
+            totalVolume: 0,
+            totalGasUsed: 0,
+            avgSlippage: 0,
+            profileLoss: 0,
+        });
+    }
+
+    const perf = history.performance.get(tokenAddress);
+    perf.totaltrades++;
+    perf.totalValue += parseFloat(trade.amount);
+    perf.totalGasused += trade.gasUsed || 0;
+    perf.avgSlippage += (perf.avgSlippage + trade.slippage) / 2;
+}
+
+/**
+ * Get trading history
+ * @param {Object} history - Trading history storage
+ * @param {string} tokenAddress - Optional token filter
+ * @param {number} limit - Number of trades to return
+ * @returns {Array} Array of trades
+ */
+function getTradeHistory(history, tokenAddress = null, limit = 10) {
+    let trades = Array.from(history.trade.values());
+
+    if (tokenAddress) {
+        trades = trades.filter((trade) => trade.tokenAddress === tokenAddress);
+    }
+    return trades.sort((a, b) => b.timestamp - a.timestamp).slice(0, limit);
+}
+
+/**
+ * Get trading statistics
+ * @param {Object} history - Trading history storage
+ * @returns {Object} Trading statistics
+ */
+function getTradingStats(history) {
+    const allTrades = Array.from(history.trade.values());
+    const totalTrades = allTrades.length;
+    const totalVolume = allTrades.reduce((sum, trade) => sum + parseFloat(trade.amount), 0);
+    const totalGasUsed = allTrades.reduce((sum, trade) => sum + (trade.gasUsed || 0), 0);
+    const avgSlippage = allTrades.reduce((sum, trade) => sum + trade.slippage, 0) / totalTrades || 0;
+
+    return {
+        totalTrades,
+        totalVolume,
+        totalGasUsed,
+        avgSlippage,
+        tradesToday: allTrades.filter((trade) => {
+            const tradeDate = new Date(trade.timestamp).toDateString();
+            const today = new Date().toDateString();
+            return tradeDate === today;
+        }).length,
+    };
+}
+
+/**
+ * Gas Optimization Functions
+ */
+
+/**
+ * Initialize gas optimization settings
+ * @returns {Object} Gas optimization settings
+ */
+function createGasptimization() {
+    return {
+        strategies: new Map([
+            [
+                'standard',
+                {
+                    gasLimit: 300000,
+                    maxFeePerGas: ethers.parseUnits('20', 'gwei'),
+                    maxPriorityFeePerGas: ethers.parseUnits('2', 'gwei'),
+                },
+            ],
+            [
+                'fast',
+                {
+                    gaslimit: 350000,
+                    maxfeepergas: ethers.parseUnits('30', 'gwei'),
+                    maxPriorityFeePerGas: ethers.parseUnits('3', 'gwei'),
+                },
+            ],
+            [
+                'slow',
+                {
+                    gaslimit: 250000,
+                    maxfeepergas: ethers.parseUnits('15', 'gwei'),
+                    maxPriorityFeePerGas: ethers.parseUnits('1.5', 'gwei'),
+                },
+            ],
+        ]),
+    };
+}
+
+/**
+ * Get optimal gas settings
+ * @param {Object} gasOpt - Gas optimization settings
+ * @param {string} strategy - Gas strategy ('standard', 'fast', 'slow')
+ * @returns {Object} Gas settings
+ */
+function getOptimalGas(gasOpt, strategy) {
+    return gasOpt.strategies.get(strategy) || gasOpt.strategies.get('standard');
+}
+
+// ... existing code ...
+
+/**
+ * Get current gas price from network with enhanced calculations
+ * @param {ethers.Provider} provider - Blockchain provider
+ * @returns {Promise<Object>} Current gas price info with recommendations
+ */
+async function getCurrentGasPrice(provider) {
+    // Default fallback values
+    const defaultGasPrice = ethers.parseUnits('20', 'gwei');
+    const defaultMaxFeePerGas = ethers.parseUnits('20', 'gwei');
+    const defaultMaxPriorityFeePerGas = ethers.parseUnits('2', 'gwei');
+
+    try {
+        const feeData = await provider.getFeeData();
+
+        // Extract current gas prices with fallbacks
+        const currentGasPrice = feeData.gasPrice || defaultGasPrice;
+        const currentMaxFeePerGas = feeData.maxFeePerGas || currentGasPrice;
+        const currentMaxPriorityFeePerGas = feeData.maxPriorityFeePerGas || defaultMaxPriorityFeePerGas;
+
+        // Helper function to calculate percentage adjustments using division
+        const calculatePercentage = (baseValue, percentage) => {
+            const multiplier = BigInt(100 + percentage);
+            const divisor = BigInt(100);
+            return (baseValue * multiplier) / divisor;
+        };
+
+        const calculateDecrease = (baseValue, percentage) => {
+            const multiplier = BigInt(100 - percentage);
+            const divisor = BigInt(100);
+            return (baseValue * multiplier) / divisor;
+        };
+
+        // Generate gas price recommendations
+        const generateRecommendations = () => ({
+            low: {
+                maxFeePerGas: calculatePercentage(currentGasPrice, 10), // 10% above
+                maxPriorityFeePerGas: calculateDecrease(currentMaxPriorityFeePerGas, 10), // 10% below
+            },
+            medium: {
+                maxFeePerGas: calculatePercentage(currentGasPrice, 20), // 20% above
+                maxPriorityFeePerGas: currentMaxPriorityFeePerGas, // Same as current
+            },
+            high: {
+                maxFeePerGas: calculatePercentage(currentGasPrice, 50), // 50% above
+                maxPriorityFeePerGas: calculatePercentage(currentMaxPriorityFeePerGas, 20), // 20% above
+            },
+        });
+
+        const recommendations = generateRecommendations();
+
+        // Format values for display
+        const formatGasValue = (value) => ethers.formatUnits(value, 'gwei');
+
+        return {
+            // Raw BigInt values
+            gasPrice: currentGasPrice,
+            maxFeePerGas: currentMaxFeePerGas,
+            maxPriorityFeePerGas: currentMaxPriorityFeePerGas,
+
+            // Formatted string values
+            formatted: {
+                gasPrice: formatGasValue(currentGasPrice),
+                maxFeePerGas: formatGasValue(currentMaxFeePerGas),
+                maxPriorityFeePerGas: formatGasValue(currentMaxPriorityFeePerGas),
+            },
+
+            // Formatted recommendations
+            recommendations: {
+                low: {
+                    maxFeePerGas: formatGasValue(recommendations.low.maxFeePerGas),
+                    maxPriorityFeePerGas: formatGasValue(recommendations.low.maxPriorityFeePerGas),
+                },
+                medium: {
+                    maxFeePerGas: formatGasValue(recommendations.medium.maxFeePerGas),
+                    maxPriorityFeePerGas: formatGasValue(recommendations.medium.maxPriorityFeePerGas),
+                },
+                high: {
+                    maxFeePerGas: formatGasValue(recommendations.high.maxFeePerGas),
+                    maxPriorityFeePerGas: formatGasValue(recommendations.high.maxPriorityFeePerGas),
+                },
+            },
+        };
+    } catch (error) {
+        console.error('Error getting current gas price:', error.message);
+
+        // Return fallback values with pre-calculated recommendations
+        return {
+            gasPrice: defaultGasPrice,
+            maxFeePerGas: defaultMaxFeePerGas,
+            maxPriorityFeePerGas: defaultMaxPriorityFeePerGas,
+            formatted: {
+                gasPrice: '20.0',
+                maxFeePerGas: '20.0',
+                maxPriorityFeePerGas: '2.0',
+            },
+            recommendations: {
+                low: { maxFeePerGas: '22.0', maxPriorityFeePerGas: '1.8' },
+                medium: { maxFeePerGas: '24.0', maxPriorityFeePerGas: '2.0' },
+                high: { maxFeePerGas: '30.0', maxPriorityFeePerGas: '2.4' },
+            },
+        };
+    }
+}
+
+/**
+ * Price Impact Analysis Functions
+ */
+
+/**
+ * Calculate price impact for a trade
+ * @param {Object} contractManager - Contract manager instance
+ * @param {string} tokenAddress - Token address
+ * @param {bigint} amountIn - Input amount
+ * @param {string} direction - 'buy' or 'sell'
+ * @returns {Promise<Object>} Price impact data
+ */
+async function calculatePriceImpact(contractManager, tokenAddress, amountIn, direction = 'buy') {
+    try {
+        const router = contractManager.getRouterContract();
+
+        if (direction === 'buy') {
+            const path = [CONTRACTS.ADDRESSES.WETH, tokenAddress];
+            const amountSout = await router.getAmountsOut(amountIn, path);
+
+            //Calculate price impact (simplified)
+            const expectedOutput = amountSout[1];
+            const priceImpact = 0.1; // Simplified calculation - in reality would compare with pool reserves
+
+            return {
+                expectedOutput: ethers.formatUnits(expectedOutput, 18),
+                priceImpact: priceImpact * 100, //convert to percentage
+                impactLevel: priceImpact > 0.05 ? 'high' : priceImpact > 0.02 ? 'MEDIUM' : 'LOW',
+                recommendation: priceImpact > 0.05 ? 'consider splitting trade' : 'safe to excute',
+            };
+        } else {
+            const path = [tokenAddress, CONTRACTS.ADDRESSES.WETH];
+            const amountOut = await router.getAmountsOut(amountIn, path);
+
+            const expectedOutPut = amountOut[1];
+            const priceImpact = 0.08; // Simplified calculation - in reality would compare with pool reserves
+            return {
+                expectedOutput: ethers.formatEther(expectedOutPut),
+                priceImpact: priceImpact * 100,
+                impactLevel: priceImpact > 0.05 ? 'high' : priceImpact > 0.02 ? 'MEDIUM' : 'LOW',
+                recommendation: priceImpact > 0.05 ? 'consider splitting trade' : 'safe to excute',
+            };
+        }
+    } catch (error) {
+        console.error('Error calculating price impact:', error.message);
+        return {
+            expectedOutPut: '0',
+            priceImpact: 0,
+            impactLevel: 'UNKNOWN',
+            recommendation: 'Unable to calculate - proceed with caution',
+        };
+    }
+}
+
+/**
+ * Risk Management Functions - COMPLETE
+ */
+
+/**
+ * Initialize risk management system
+ * @returns {Object} Risk management settings
+ */
+function createRiskManagement() {
+    return {
+        limits: {
+            maxSlippage: 10, // 10% maximum slippage
+            maxPriceImpact: 5, // 5% maximum price impact
+            maxTradeSize: 10, // 10 ETH maximum trade size
+            maxDailyLoss: 5, // 5% maximum daily loss
+            maxGasPrice: 50, // 50 gwei maximum gas price
+        },
+
+        alerts: new Map(),
+        riskScore: 0,
+        dailyLoss: 0,
+        lastReset: Date.now(),
+    };
+}
+
+/**
+ * Calculate risk score for a trade
+ * @param {Object} riskMgmt - Risk management instance
+ * @param {Object} tradeData - Trade data
+ * @returns {Object} Risk assessment
+ */
+function calculateRiskScore(riskMgmt, tradeData) {
+    let riskScore = 0;
+    const warnings = [];
+    const recommendations = [];
+
+    //check slippage risk
+    if (tradeData.slippage > riskMgmt.limits.maxSlippage) {
+        riskScore += 30;
+        warnings.push(`High slippage ${tradeData.slippage}% - (limit: ${riskMgmt.limits.maxSlippage}%)`);
+    }
+
+    // check price impact risk
+    if (tradeData.priceImpact > riskMgmt.limits.maxPriceImpact) {
+        riskScore += 25;
+        warnings.push(`High price impact ${tradeData.priceImpact}% - (limit: ${riskMgmt.limits.maxPriceImpact}%)`);
+    }
+
+    // check trade size risk
+    if (tradeData.amount > riskMgmt.limits.maxTradeSize) {
+        riskScore += 20;
+        warnings.push(`Large trade size ${tradeData.amount} ETH - (limit: ${riskMgmt.limits.maxTradeSize} ETH)`);
+    }
+
+    // check gas price risk
+    if (tradeData.gasPrice > riskMgmt.limits.maxGasPrice) {
+        riskScore += 15;
+        warnings.push(`High gas price ${tradeData.gasPrice} gwei - (limit: ${riskMgmt.limits.maxGasPrice} gwei)`);
+    }
+
+    // check daily loss risk
+    if (riskMgmt.dailyLoss > riskMgmt.limits.maxDailyLoss) {
+        riskScore += 40;
+        warnings.push(
+            `Daily loss limmit exceeded: ${riskMgmt.dailyLoss} ETH - (limit: ${riskMgmt.limits.maxDailyLoss} ETH)`
+        );
+    }
+
+    if (riskScore >= 70) {
+        recommendations.push('HIGH RISK - Consider canceling trade');
+    } else if (riskScore >= 40) {
+        recommendations.push('MEDIUM RISK - Consider reducing trade size');
+    } else if (riskScore >= 20) {
+        recommendations.push('LOW RISK - Monitor trade closely');
+    } else {
+        recommendations.push('SAFE - Trade within acceptable risk parameters');
+    }
+
+    return {
+        riskScore: Math.min(100, riskScore),
+        riskLevel: riskScore >= 70 ? 'HIGH' : riskScore >= 40 ? 'MEDIUM' : riskScore >= 20 ? 'LOW' : 'SAFE',
+        warnings,
+        recommendations,
+        canProceed: riskScore < 70,
+    };
+}
+/**
  * Register Basic Commands
  *
  * These commands provide basic wallet and system information
@@ -931,5 +1341,7 @@ async function main() {
     await testAdvancedFeatures();
 }
 
+// Start the application
+main();
 // Start the application
 main();
